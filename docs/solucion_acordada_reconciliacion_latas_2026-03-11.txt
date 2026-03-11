@@ -1,0 +1,57 @@
+SOLUCION ACORDADA - RECONCILIACION DE LATAS
+Fecha: 2026-03-11
+Proyecto: Mi Lata Vale (WordPress)
+
+1) Objetivo
+- Hacer calzar el total de latas de la app con la planilla teorica.
+- Mantener trazabilidad contable.
+- Evitar alteracion neta de saldos de dinero.
+
+2) Diagnostico acordado
+- Total latas planilla teorica: 27.912
+- Total latas KPI app (actual): 22.195
+- Diferencia a reconciliar: +5.717 latas
+- Si se agregan latas como reciclaje normal, sube dinero; eso NO es lo buscado.
+
+3) Solucion acordada en reunion
+- Aplicar ajuste por local/usuarios afectados en doble movimiento:
+  A) Movimiento de ingreso de latas (para subir latas).
+  B) Movimiento de gasto compensatorio por el mismo monto ("gasto falso") para neutralizar efecto monetario.
+
+Resultado esperado:
+- KPI de latas sube y calza con planilla.
+- El saldo monetario neto no cambia.
+- Queda registro trazable de reconciliacion.
+
+4) Reglas de implementacion
+- No borrar movimientos historicos.
+- No editar movimientos originales en masa.
+- Registrar todo como nuevos movimientos de ajuste con metadatos de auditoria.
+- Usar etiqueta comun de detalle, ejemplo:
+  "reconciliacion_teorica_2026_03_11"
+- Ejecutar primero en staging, luego en produccion.
+
+5) Distribucion de las 5.717 latas
+- Se define segun criterio de reunion:
+  - Reparto exacto por diferencia por local, o
+  - Reparto parejo entre 4 locales afectados: 1.430 / 1.429 / 1.429 / 1.429
+- Confirmar lista final de locales y monto por local antes de aplicar.
+
+6) Checklist operativo
+- [ ] Backup completo DB antes de aplicar.
+- [ ] Simulacion (dry-run) con reporte por local y usuario.
+- [ ] Aplicacion en staging.
+- [ ] Validacion de KPIs y export CSV.
+- [ ] Aplicacion en produccion.
+- [ ] Validacion final y cierre.
+
+7) Validaciones posteriores
+- KPI Latas debe quedar en 27.912.
+- Saldo disponible, generado por reciclaje, generado por incentivos y canjeado:
+  deben mantener coherencia neta segun compensacion aplicada.
+- Revisar muestra de usuarios/locales para confirmar que no hubo desbalance de dinero.
+
+8) Nota de gobernanza
+- Cualquier desfase futuro debe resolverse con el mismo patron:
+  "ajuste de latas + compensacion monetaria" o KPI teorico separado,
+  segun definicion de negocio vigente.

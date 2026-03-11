@@ -1,0 +1,10 @@
+.DS_Store
+node_modules
+.env
+.env.local
+
+app/node_modules
+app/.next
+app/out
+
+supabase/.temp

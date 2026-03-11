@@ -1,0 +1,1101 @@
+/* === MLV2 Combined CSS (auto-generated) === */
+
+/* -- Global variables (moved from inline) -- */
+:root{--mlv2-green:#1E8623;--mlv2-yellow:#E9D758;--mlv2-red:#EC4E20;--mlv-green:#1E8623;--mlv-warn:#E9D758;--mlv-err:#EC4E20;}
+
+/* -- front.css -- */
+/* =========================================================
+   Mi Lata Vale V2 - Front UI (Avada overrides integrados)
+   Archivo optimizado (sin duplicados)
+   ========================================================= */
+
+/* -------------------------
+   Layout / wrappers
+   ------------------------- */
+
+:root{
+  --mlv2-green: #1E8623;
+  --mlv2-yellow: #E9D758;
+  --mlv2-red: #EC4E20;
+}
+.mlv2-wrap{
+  max-width:1200px;
+  margin:0 auto;
+  padding:16px;
+}
+
+.form-latas .mlv2-wrap,
+.form-gastos .mlv2-wrap {
+  padding:0px; 
+}
+
+.mlv2-card.um.uimob800,
+.mlv2-card.um.uimob500 {
+    padding: 30px;
+}
+
+
+
+.mlv2-wrap.um{
+  margin:0 !important;
+  padding:0px;
+}
+
+.mlv2-grid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:16px;
+}
+
+@media (min-width:900px){
+  .mlv2-grid{ grid-template-columns:1fr 1fr; }
+}
+
+/* Headings */
+.mlv2-h2{
+  font-size:30px !important;
+  margin-bottom:10px !important;
+}
+
+/* -------------------------
+   Cards
+   ------------------------- */
+.mlv2-card{
+  background:#fff;
+  border:1px solid rgba(0,0,0,.08);
+  border-radius:10px;
+  padding:14px;
+}
+
+.mlv2-card--warn{
+  border-color:rgba(224,86,86,.35);
+  background:rgba(224,86,86,.06);
+}
+
+.mlv2-card--ok{
+  border-color:rgba(46,204,113,.35);
+  background:rgba(46,204,113,.07);
+}
+
+/* Ocultar headers duplicados (Avada/panel) */
+.mlv2-section-header,
+.mlv2-card__header{
+  display:none !important;
+}
+
+/* -------------------------
+   Meta grid
+   ------------------------- */
+.mlv2-meta-grid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:10px;
+}
+
+@media (min-width:700px){
+  .mlv2-meta-grid{ grid-template-columns:1fr 1fr; }
+}
+
+.mlv2-meta__k{ font-size:12px; opacity:.75; margin-bottom:2px; }
+.mlv2-meta__v{ font-size:14px; font-weight:600; }
+
+/* -------------------------
+   KPIs
+   ------------------------- */
+.mlv2-kpis{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:12px;
+  margin:0 !important;          /* Avada override */
+  margin-top:0 !important;      /* extra */
+}
+
+@media (min-width:700px){
+  .mlv2-kpis{ grid-template-columns:repeat(3,1fr); }
+}
+
+.mlv2-kpi{
+  background:#fff;
+  border:1px solid rgba(0,0,0,.08);
+  border-radius:10px;
+  padding:14px;
+}
+
+.mlv2-kpi__k{ font-size:12px; opacity:.75; margin-bottom:8px; }
+.mlv2-kpi__v{ font-size:35px !important; font-weight:800; line-height:1.1; }
+.mlv2-kpi-note{ display:block; margin-top:6px; font-size:11px; opacity:.7; }
+
+/* -------------------------
+   Tables
+   ------------------------- */
+.mlv2-table-wrap{
+  width:100%;
+  overflow-x:auto;
+}
+
+.mlv2-table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:13px;
+  min-width:100%;
+  table-layout:fixed;
+}
+
+.mlv2-table th,
+.mlv2-table td{
+  border-bottom:1px solid rgba(0,0,0,.08);
+  padding:10px;
+  vertical-align:top;
+  white-space:normal;
+  word-break:break-word;
+}
+
+.mlv2-table th{
+  font-weight:800;
+  font-size:12px;
+  background:rgba(0,0,0,.02);
+}
+
+.mlv2-row--muted{ opacity:.55; }
+.mlv2-row--muted .um-button,
+.mlv2-row--muted button,
+.mlv2-row--muted input{ pointer-events:none; }
+
+/* ==========================================================
+   Responsive tables (shortcodes)
+   Add class .mlv2-table--cards to a table and set data-label
+   on <td> cells. On mobile it becomes stacked “cards”.
+   ========================================================== */
+@media (max-width: 768px){
+  table.mlv2-table--cards{
+    min-width:0;
+    table-layout:auto;
+  }
+  table.mlv2-table--cards thead{ display:none; }
+  table.mlv2-table--cards,
+  table.mlv2-table--cards tbody,
+  table.mlv2-table--cards tr,
+  table.mlv2-table--cards td{ display:block; width:100%; }
+
+  table.mlv2-table--cards tr{
+    background:#fff;
+    border:1px solid rgba(0,0,0,.08);
+    border-radius:10px;
+    padding:10px;
+    margin:0 0 12px 0;
+  }
+
+  table.mlv2-table--cards td{
+    border:none;
+    padding:0px;
+    display:flex;
+    gap:12px;
+    justify-content:space-between;
+    align-items:flex-start;
+  }
+
+  table.mlv2-table--cards td::before{
+    content:attr(data-label);
+    font-weight:800;
+    opacity:.75;
+    flex:0 0 44%;
+  }
+  
+}
+
+/* Tools: search + filters */
+.mlv2-table-tools{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  align-items:center;
+  margin:0 0 20px 0 !important; /* Avada override */
+}
+
+.mlv2-table-search,
+.mlv2-table-filter{
+  appearance:none;
+  -webkit-appearance:none;
+  border-radius:10px;
+  font-size:13px;
+  line-height:1;
+  background:#fff;
+}
+
+.mlv2-table-search{
+  height:50px !important;
+  padding:10px !important;
+  margin-right:10px !important;
+  border-radius:10px !important;
+  border:solid 1px #345a95 !important;
+  min-width:240px;
+  flex:1 1 240px;
+}
+
+.mlv2-table-filter{
+  padding:10px !important;
+  border:1px solid rgba(0,0,0,.18);
+  min-width:200px;
+  flex:0 0 auto;
+}
+
+.mlv2-table-search:focus,
+.mlv2-table-filter:focus{
+  outline:none;
+}
+
+/* -------------------------
+   Inline forms / inputs
+   ------------------------- */
+.mlv2-inline-form{ margin:0; }
+.um.um-form.mlv2-inline-form{ margin-bottom:0 !important; }
+
+.mlv2-inline{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+
+.mlv2-inline-status{
+  position:absolute !important;
+  margin-top:-20px !important;
+  margin-left:24px !important;
+  opacity:.8;
+}
+
+/* Size helpers */
+.mlv2-small{
+  width:80px !important;
+}
+
+.mlv2-medium{
+  width:220px !important;
+}
+
+/* -------------------------
+   Alerts (convencional)
+   ------------------------- */
+.mlv2-alerts{ margin:0 0 6px 0; }
+
+.mlv2-alert{
+  position:relative;
+  background:#fff !important;
+  padding:10px 40px 10px 12px !important;
+  border-radius:10px !important;
+  animation:mlv2AlertIn .22s ease-out;
+  margin-bottom:10px;
+}
+
+.mlv2-alert--ok{
+  background: var(--mlv2-green) !important;
+  color: #ffffff !important;
+}
+
+.mlv2-alert--info{
+  background: var(--mlv2-yellow) !important;
+  color: #111827 !important;
+}
+
+.mlv2-alert--warn{
+  background: var(--mlv2-yellow) !important;
+  color: #111827 !important;
+  line-height: 1.4;
+}
+
+.form-gastos .mlv2-alert--warn{
+  margin-bottom:20px !important
+}
+
+.mlv2-alert--error,
+.mlv2-alert--err{
+  background: var(--mlv2-red) !important;
+  color: #ffffff !important;
+}
+
+.mlv2-alert__close{
+  position:absolute !important;
+  top:6px !important;
+  right:8px !important;
+  float:none !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  width:28px;
+  height:28px;
+  line-height:26px;
+  border:none;
+  background:transparent;
+  font-size:20px;
+  cursor:pointer;
+  opacity:.65;
+}
+
+.mlv2-wrap button.mlv2-alert__close{
+  padding:0px !important;
+
+}
+
+.mlv2-wrap button.mlv2-alert__close {
+    padding: 0px !important;
+    height: 0px;
+    min-height: 32px !important;
+    display: block !important;
+    color: white;
+}
+
+.mlv2-alert__close:hover{ opacity:1; }
+
+@keyframes mlv2AlertIn{
+  from{ transform:translateY(-6px); opacity:0; }
+  to{ transform:translateY(0); opacity:1; }
+}
+
+.mlv-label-sm{
+  font-weight:400 !important;
+  width:20px !important;
+  font-size:15px !important;
+}
+
+/* Horarios */
+.mlv-hours{
+  border:none !important;
+  border-radius:10px !important;
+  padding:0 !important;
+}
+
+.mlv-day{
+  border:none !important;
+  padding:20px !important;
+  background:#eeecec !important;
+  margin:0 0 20px !important;
+  border-radius:10px !important;
+}
+
+.mlv-select{
+  padding:5px !important;
+  height:40px !important;
+}
+
+/* -------------------------
+   Registro de latas
+   ------------------------- */
+.form-latas .mlv2-card,
+.form-gastos .mlv2-card {
+  background:#fff !important;
+  border:none !important;
+  padding:0 !important;
+}
+
+
+
+/* === File input moderno (registro latas) === */
+.mlv2-file{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+.mlv2-file__input{
+  position:absolute;
+  left:-9999px;
+  width:1px;
+  height:1px;
+  overflow:hidden;
+}
+.mlv2-file__name{
+  font-size: 0.95em;
+  opacity: .85;
+}
+
+.mlv2-help{
+  font-size: 0.95em;
+  opacity: .85;
+  margin-top:6px;
+}
+
+/* === Filtro por local (Panel Cliente) === */
+.mlv2-subkpis{ margin:10px 0 14px; }
+.mlv2-subkpis .mlv2-kpi__l{ font-size: .92em; opacity:.9; }
+
+/* -------------------------
+   Overrides solicitados (equivalentes a tu "Global CSS" de Avada)
+   ------------------------- */
+@media screen and (max-width: 600px) {
+  .mlv2-kpis {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .mlv2-kpi__v {
+    font-size: 25px !important;
+  }
+  .mlv2-table-search {
+    display: none !important;
+  }
+  .mlv2-subkpis .mlv2-kpis {
+    grid-template-columns: repeat(2, 1fr) !important;
+    width: 100% !important;
+  }
+
+body .kpi-a-lista .mlv2-kpis {
+
+}
+
+body .kpi-a-lista .mlv2-kpi {
+}
+
+body .kpi-a-lista .mlv2-kpi .mlv2-kpi__v {
+        font-size: inherit !important;
+        display: contents;
+}
+}
+
+.um-button.um-alt[type="submit"],
+.um a.um-button.um-alt{
+  background: var(--mlv2-green) !important;
+  border-color: var(--mlv2-green) !important;
+  color: #ffffff !important;
+}
+.um-button.um-alt[type="submit"]:hover,
+.um a.um-button.um-alt:hover{
+  filter: brightness(1.05);
+}
+
+.mlv2-kpi{
+  background-color: #ffffff63 !important;
+  border: solid 1px #ffffff63 !important;
+  color: var(--mlv2-green) !important;
+}
+
+
+/* ==========================================================
+   Unificación de UI (inputs + botones)
+   - Evita estilos "raros" de Avada/UM dentro del plugin
+   - Todo se acota a .mlv2-wrap
+   ========================================================== */
+
+.mlv2-wrap{
+  --mlv2-radius: 10px;
+  --mlv2-border: 1px solid rgba(52,90,149,.55);
+  --mlv2-shadow: 0 10px 30px rgba(0,0,0,.10);
+  --mlv2-input-h: 56px;
+  --mlv2-pad: 18px;
+}
+
+.mlv2-wrap p{ line-height:1.55; }
+
+/* Controles de formulario */
+.mlv2-wrap :where(input[type="text"], input[type="tel"], input[type="email"], input[type="number"], input[type="password"], select, textarea){
+  width: 100% !important;
+  box-sizing: border-box;
+  min-height: var(--mlv2-input-h);
+  padding: 14px 16px !important;
+  border-radius: var(--mlv2-radius) !important;
+  border: var(--mlv2-border) !important;
+  background: #fff !important;
+  font-size: 16px;
+  line-height: 1.2;
+  outline: none !important;
+}
+.mlv2-wrap textarea{
+  min-height: 120px;
+  resize: vertical;
+}
+.mlv2-wrap :where(select){
+  padding-right: 44px !important;
+}
+
+/* Focus visible */
+.mlv2-wrap :where(input, select, textarea):focus{
+  border-color: rgba(30,134,35,.85) !important;
+}
+
+/* Labels (cuando existan) */
+.mlv2-wrap label{
+  font-weight: 700;
+  opacity: .75;
+}
+
+/* Botones */
+.mlv2-wrap :where(.um-button, button, input[type="submit"]){
+  border-radius: var(--mlv2-radius) !important;
+  min-height: var(--mlv2-input-h);
+  padding: 14px 18px !important;
+  font-weight: 800 !important;
+}
+
+/* Primario (verde) */
+.mlv2-wrap :where(.um-button.um-alt, .mlv2-btn--primary){
+  background: var(--mlv2-green) !important;
+  border-color: var(--mlv2-green) !important;
+  color: #fff !important;
+}
+.mlv2-wrap :where(.um-button.um-alt:hover, .mlv2-btn--primary:hover){
+  filter: brightness(.95);
+}
+
+/* Secundario (azul/neutral de Avada) */
+.mlv2-wrap :where(.um-button:not(.um-alt)){
+  background: #3aa0d8 !important;
+  border-color: #3aa0d8 !important;
+  color: #fff !important;
+}
+.mlv2-wrap :where(.um-button:not(.um-alt):hover){
+  filter: brightness(.95);
+}
+
+/* Filas de botones: siempre 2 columnas en desktop, 1 en móvil */
+.mlv2-btn-row{
+  display: grid !important;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 14px;
+}
+.mlv2-btn-row > form,
+.mlv2-btn-row > a{
+  width: 100%;
+}
+.mlv2-btn-row form{ margin:0 !important; }
+.mlv2-btn-row :where(button.um-button, a.um-button){
+  width: 100% !important;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  white-space: normal;
+}
+@media (max-width: 600px){
+  .mlv2-btn-row{ grid-template-columns: 1fr; }
+}
+
+/* Utilidades */
+.mlv2-small{ width: 80px !important; }
+@media (max-width: 600px){
+  .mlv2-small{ width: 100% !important; }
+}
+
+
+
+/* -- mlv2-responsive-tables.css -- */
+/* MLV2 Responsive Tables → Cards UX (FORCEINLINE build)
+   Cards enabled up to 1024px (mobile + tablets)
+*/
+
+@media (max-width: 1024px) {
+  .mlv2-table { border: none; width:100% !important; max-width:100% !important; }
+  .mlv2-table thead { display:none; }
+  .mlv2-table tr {
+    display:block; margin-bottom:1rem;border-radius:5px;
+    padding:.75rem;
+  }
+  .mlv2-table td {
+    display:grid; grid-template-columns:42% 58%;
+    padding:0; border:none;
+  }
+  .mlv2-table td::before {
+    content:attr(data-label) !important;
+    display:block;
+    font-weight:600;
+    color:#555;
+    padding:6px 8px 6px 0;
+    white-space:nowrap;
+  }
+
+  /* Hard: stop horizontal scrolling caused by theme wrappers */
+  .mlv2-wrapper, .mlv2-container, .fusion-builder-row, .fusion-fullwidth, body {
+    overflow-x:hidden !important;
+  }
+
+  .mlv2-mov.mlv2-mov--gasto td[data-label="Evidencia"],
+.mlv2-mov.mlv2-mov--ingreso td[data-label="Evidencia"], 
+.mlv2-mov.mlv2-mov--gasto td[data-label="Valor por lata"],
+.mlv2-mov.mlv2-mov--ingreso td[data-label="Valor por lata"],
+.mlv2-mov.mlv2-mov--gasto td[data-label="Latas"],
+.mlv2-mov.mlv2-mov--gasto td[data-label="Ingreso/Gasto"],
+.mlv2-mov.mlv2-mov--ingreso td[data-label="Ingreso/Gasto"]
+ {
+  display: none;
+}
+
+    .mlv2-mov.mlv2-mov--ingreso {
+        border: solid 1px #1e862345;
+        background: #1e86231c;
+        border-left-width: 5px;
+    }
+
+    .mlv2-mov.mlv2-mov--gasto {
+        border: solid 1px #ec502031;
+        background: #ec4e201a;
+        border-left-width: 5px;
+    }
+
+}
+
+@media (min-width: 1025px) {
+  .mlv2-table { table-layout: fixed; }
+}
+
+
+/* -- mlv2-demo-force.css -- */
+
+/* =========================================================
+   MLV2 - DEMO FORCE OVERRIDES
+   (Carga garantizada al final del enqueue)
+   ========================================================= */
+
+/* Tus fixes tal cual, reforzados donde hace falta */
+.mlv2-kpis {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+}
+
+@media screen and (max-width: 600px) {
+  .mlv2-kpis {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .mlv2-kpi__v {
+    font-size: 25px !important;
+  }
+  .mlv2-table-search {
+    display: none !important;
+  }
+  .menu-esconder-movil {
+    display: none !important;
+  }
+  .menu-mostrar-movil {
+    display: block !important;
+  }
+  .mlv2-subkpis .mlv2-kpis {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    width: 100% !important;
+  }
+}
+
+.menu-mostrar-movil {
+  display: none;
+}
+
+.mlv2-file__input {
+  display: none !important;
+}
+
+a.mlv2-link {
+  color: #5E862B !important;
+}
+
+.mlv2-preview-box img {
+  max-width: 300px !important;
+}
+
+.mlv2-card .mlv2-alert {
+  background: #1E8623 !important;
+  color: white !important;
+}
+
+.mlv2-card p {
+  margin-bottom: 15px !important;
+}
+
+/* Botonera (confirmaciones) - unificada */
+.mlv2-btn-row{
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  gap:10px !important;
+  align-items:stretch !important;
+}
+.mlv2-btn-row > *,
+.mlv2-btn-row form{
+  width:100% !important;
+  margin:0 !important;
+}
+.mlv2-btn-row a.um-button,
+.mlv2-btn-row button,
+.mlv2-btn-row input[type="submit"],
+.mlv2-btn-row input[type="button"]{
+  width:100% !important;
+  min-height:50px !important;
+  box-sizing:border-box !important;
+}
+@media (max-width:700px){
+  .mlv2-btn-row{ grid-template-columns:1fr !important; }
+}
+
+.mlv2-inline-form {
+  background-color: white !important;
+  border-radius: 10px !important;
+  margin-bottom: 15px !important;
+  padding: 15px !important;
+}
+
+.mlv2-table-filter {
+  display: none !important;
+}
+
+.mlv2-subkpis .mlv2-kpis {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  margin-bottom: 15px !important;
+}
+
+.mlv2-subkpis .mlv2-kpi__v {
+  font-size: 23px !important;
+}
+
+.mlv2-subkpis .mlv2-kpi__l {
+  font-size: 15px !important;
+}
+
+.mlv2-kpi {
+    background-color: #ffffff85 !important;
+    border: none !important;
+    color: black !important;
+}
+
+.mlv2-subkpis .mlv2-kpis .mlv2-kpi {
+  background-color: white !important;
+  color: inherit !important;
+}
+
+
+
+/* =========================================================
+   MLV2 - UI UNIFY (FORCE LAYER)
+   Objetivo: que todos los controles del plugin se vean igual,
+   incluso si Avada/UM aplica estilos con !important.
+   ========================================================= */
+
+/* Inputs / selects / textareas */
+.mlv2-wrap .mlv2-card input[type="text"],
+.mlv2-wrap .mlv2-card input[type="email"],
+.mlv2-wrap .mlv2-card input[type="tel"],
+.mlv2-wrap .mlv2-card input[type="number"],
+.mlv2-wrap .mlv2-card input[type="password"],
+.mlv2-wrap .mlv2-card select,
+.mlv2-wrap .mlv2-card textarea,
+.mlv2-wrap form input[type="text"],
+.mlv2-wrap form input[type="email"],
+.mlv2-wrap form input[type="tel"],
+.mlv2-wrap form input[type="number"],
+.mlv2-wrap form input[type="password"],
+.mlv2-wrap form select,
+.mlv2-wrap form textarea{
+  width:100% !important;
+  box-sizing:border-box !important;
+  border:2px solid #2b5cab !important;
+  border-radius:10px !important;
+  padding:12px 10px !important;
+  min-height:50px !important;
+  background:#fff !important;
+  color:#111 !important;
+  font-size:18px !important;
+  line-height:1.3 !important;
+  outline:none !important;
+}
+
+/* Focus (accesibilidad) */
+.mlv2-wrap .mlv2-card input:focus,
+.mlv2-wrap .mlv2-card select:focus,
+.mlv2-wrap .mlv2-card textarea:focus,
+.mlv2-wrap form input:focus,
+.mlv2-wrap form select:focus,
+.mlv2-wrap form textarea:focus{
+  box-shadow:0 0 0 4px rgba(30,134,35,.18) !important;
+  border-color:#1E8623 !important;
+}
+
+/* Labels */
+.mlv2-wrap .mlv2-card label,
+.mlv2-wrap form label,
+.mlv-form-cliente-almacen label{
+  display:block !important;
+  color:#4b4b4b !important;
+  margin:0 0 10px !important;
+}
+mlv-form-cliente-almacen
+
+/* Botones - base */
+.mlv2-wrap .um-button,
+.mlv2-wrap a.um-button,
+.mlv2-wrap button,
+.mlv2-wrap input.um-button,
+.mlv2-wrap input[type="submit"],
+.mlv2-wrap input[type="button"],
+.mlv2-wrap .mlv2-btn{
+  border-radius:10px !important;
+  padding:14px 18px !important;
+  font-weight:400 !important;
+  text-transform:none !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:10px !important;
+  box-shadow: none;
+  font-family: inherit;
+}
+
+/* Primario verde */
+.mlv2-wrap .um-button.um-alt,
+.mlv2-wrap button.um-button.um-alt,
+.mlv2-wrap input.um-button.um-alt,
+.mlv2-wrap .mlv2-btn--primary{
+  background:#1E8623 !important;
+  border:2px solid #1E8623 !important;
+  color:#fff !important;
+}
+
+/* Secundario (Volver) */
+.mlv2-wrap .um-button:not(.um-alt),
+.mlv2-wrap input.um-button:not(.um-alt),
+.mlv2-wrap .mlv2-btn--secondary {
+    background: #d0e3e3 !important;
+    color: black !important;
+    min-height: 0px !important;
+    margin-bottom:0px !important;
+}
+
+/* Grilla de botones en confirmaciones */
+.mlv2-wrap .mlv2-btn-row{
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  gap:10px !important;
+  align-items:stretch !important;
+}
+.mlv2-wrap .mlv2-btn-row > *{
+  width:100% !important;
+}
+.mlv2-wrap .mlv2-btn-row form{
+  width:100% !important;
+}
+.mlv2-wrap .mlv2-btn-row form button,
+.mlv2-wrap .mlv2-btn-row form input[type="submit"],
+.mlv2-wrap .mlv2-btn-row form input[type="button"],
+.mlv2-wrap .mlv2-btn-row a.um-button{
+  width:100% !important;
+  min-height:50px !important;
+}
+
+/* Confirmación: fuerza primario (submit) y secundario (volver) */
+.mlv2-wrap .mlv2-btn-row form button,
+.mlv2-wrap .mlv2-btn-row form input[type="submit"],
+.mlv2-wrap .mlv2-btn-row form input[type="button"]{
+  background:#1E8623 !important;
+  border:2px solid #1E8623 !important;
+  color:#fff !important;
+  white-space:normal !important;
+  text-align:center !important;
+}
+
+.mlv2-wrap .mlv2-btn-row a.um-button{
+  background:#3aa0d8 !important;
+  border:2px solid #3aa0d8 !important;
+  color:#fff !important;
+  white-space:normal !important;
+  text-align:center !important;
+}
+
+
+/* Móvil: botones apilados */
+@media (max-width:700px){
+  .mlv2-wrap .mlv2-btn-row{
+    grid-template-columns:1fr !important;
+  }
+}
+
+/* Select: eliminar look "gris" de algunos navegadores */
+.mlv2-wrap select{
+  -webkit-appearance:menulist !important;
+  appearance:menulist !important;
+}
+
+
+
+/* -- Responsive cards (moved from inline) -- */
+/* MLV2 Responsive Tables → Cards UX (FORCEINLINE build)
+   Cards enabled up to 1024px (mobile + tablets)
+*/
+
+@media (max-width: 1024px) {
+  .mlv2-table { border: none; width:100% !important; max-width:100% !important; }
+  .mlv2-table thead { display:none; }
+  .mlv2-table tr {
+    display:block; margin-bottom:1rem;border-radius:5px;
+    padding:.75rem; box-shadow:none;
+  }
+  .mlv2-table td {
+    display:grid; grid-template-columns:42% 58%;
+    padding:0; border:none;
+  }
+  .mlv2-table td::before {
+    content:attr(data-label) !important;
+    display:block;
+    font-weight:600;
+    color:#555;
+    padding:0;
+    white-space:nowrap;
+  }
+
+  .mlv2-table tr:last-child {
+        margin-bottom: 0px;
+    }
+
+    td[data-label="Evidencia"], 
+  td[data-label="Valor por Lata"] {
+  display: none;
+}
+
+  /* Hard: stop horizontal scrolling caused by theme wrappers */
+  .mlv2-wrapper, .mlv2-container, .fusion-builder-row, .fusion-fullwidth, body {
+    overflow-x:hidden !important;
+  }
+}
+
+@media (min-width: 1025px) {
+  .mlv2-table { table-layout: fixed; }
+}
+
+
+/* -- Footer force rules (moved from inline) -- */
+.mlv2-wrap .mlv2-btn-row{display:flex !important;gap:10px !important;align-items:stretch !important;flex-wrap:wrap !important;}
+.mlv2-wrap .mlv2-btn-row > *{flex:1 1 0% !important;min-width:0 !important;}
+.mlv2-wrap .mlv2-btn-row form{display:flex !important;flex:1 1 0% !important;width:100% !important;margin:0 !important;}
+.mlv2-wrap .mlv2-btn-row form > *{width:100% !important;}
+.mlv2-wrap .mlv2-btn-row a.um-button,.mlv2-wrap .mlv2-btn-row button,.mlv2-wrap .mlv2-btn-row input[type=submit],.mlv2-wrap .mlv2-btn-row input[type=button]{width:100% !important;min-height:50px !important;box-sizing:border-box !important;display:flex !important;align-items:center !important;justify-content:center !important;white-space:normal !important;text-align:center !important;}
+.mlv2-wrap .mlv2-btn-row form button,.mlv2-wrap .mlv2-btn-row form input[type=submit],.mlv2-wrap .mlv2-btn-row form input[type=button]{background:#1E8623 !important;border:2px solid #1E8623 !important;color:#fff !important;}
+
+.mlv2-wrap .mlv2-btn-row a.um-button {
+    background: #E8F1F2 !important;
+    border: 2px solid #E8F1F2 !important;
+    color: black !important;
+}
+
+@media(max-width:700px){.mlv2-wrap .mlv2-btn-row{flex-direction:column !important;}}
+
+/* -- Debug badge (moved from inline; enabled via class+data attribute) -- */
+.mlv2-debug-css::before{
+  content: attr(data-mlv2-css-debug);
+  position:fixed;
+  z-index:999999;
+  left:12px;
+  bottom:12px;
+  background:#000;
+  color:#fff;
+  padding:6px 10px;
+  border-radius:8px;
+  font:12px/1.2 Arial,sans-serif;
+  opacity:.85;
+}
+
+.mlv2-wrap.um.mlv2-profile {
+  padding:0px;
+}
+
+/* -- Inline CSS moved from includes/frontend/profile-form.php -- */
+.mlv-notice-success{background:#e8f7ee; border:1px solid #b7ebc6; padding:10px; border-radius:8px; margin-bottom:12px; display:none;}
+    .mlv-notice-error{background:#fdecea; border:1px solid #f5c6cb; padding:10px; border-radius:8px; margin-bottom:12px; display:none;}
+    .mlv-hours{border:1px solid #ddd; border-radius:10px; padding:14px; margin-top:10px;}
+    .mlv-day{border-top:1px solid #eee; padding:12px 0;}
+    .mlv-day:first-child{border-top:0}
+    .mlv-day-head{display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap;}
+    .mlv-day-title{font-weight:800; font-size:20px;}
+    .mlv-badge{font-size:12px; padding:3px 8px; border-radius:999px; border:1px solid #ddd;}
+    .mlv-row{display:flex; gap:10px; align-items:center; margin-top:10px; flex-wrap:wrap;}
+    .mlv-btn{padding:8px 12px; border:1px solid #ccc; border-radius:999px; background:#fff; cursor:pointer;}
+    .mlv2-btn{border-color:#111; background:#111; color:#fff; border-radius:12px;}
+    .mlv-help{font-size:13px; opacity:.8; margin:6px 0 0}
+    .mlv-error{color:#b00020; margin-top:8px; font-size:13px;}
+    .mlv-select{padding:10px; border:1px solid #ddd; border-radius:10px; min-width:140px;}
+    .mlv-label-sm{font-weight:700; width:30px;} 
+
+.form-datos .mlv2-card.um.uimob500 {
+  padding:30px;
+}
+
+#mlv-copy-mon-to-weekdays {
+    margin-bottom: 20px;
+}
+
+
+/* -- Inline CSS moved from includes/frontend/shortcodes/traits/trait-mlv2-front-ui-registro.php -- */
+/* Make the existing UM button look modern without changing behavior */
+.mlv2-file .um-button{
+  display:block;
+  width:100%;
+  padding:12px 10px !important
+  border-radius:10px;
+  text-align:center;
+}
+
+#mlv2-preview-box{display:none;}
+
+.um:not(.um-admin):not(.um-directory) input, .um:not(.um-admin):not(.um-directory) select, .um:not(.um-admin):not(.um-directory) textarea {
+    font-size: 15px !important;
+}
+
+.form-latas .mlv2-card.um.uimob340 form p,
+.form-gastos .mlv2-card.um.uimob340 form p {
+  margin-bottom:10px !important;
+}
+
+.form-latas .mlv2-card.um.uimob340 p,
+.form-gastos .mlv2-card.um.uimob340 p {
+  margin-bottom:0px !important;
+}
+
+
+.form-latas .mlv2-card .mlv2-alert,
+.form-gastos .mlv2-card .mlv2-alert {
+    background: #E8F1F2 !important;
+    color: #345a95 !important;
+    margin-bottom: 15px !important;
+}
+
+/* =====================
+ * Paginación Movimientos (Desktop links + Mobile load more)
+ * ===================== */
+.mlv2-pagination{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+  align-items:center;
+  margin:12px 0 0;
+}
+.mlv2-pagination .mlv2-page{
+  display:inline-block;
+  padding:6px 10px;
+  border:1px solid rgba(0,0,0,.12);
+  border-radius:10px;
+  text-decoration:none;
+  line-height:1;
+}
+.mlv2-pagination .mlv2-page.is-active{
+  font-weight:700;
+}
+.mlv2-pagination .mlv2-page[aria-disabled="true"]{
+  opacity:.5;
+  pointer-events:none;
+}
+.mlv2-pagination .mlv2-ellipsis{
+  padding:0 4px;
+  opacity:.7;
+}
+
+.mlv2-loadmore{
+  margin:12px 0 0;
+  display:none;
+}
+.mlv2-loadmore-status{
+  margin-top:6px;
+  font-size:12px;
+  opacity:.75;
+}
+
+@media (max-width: 768px){
+  .mlv2-pagination{ display:none; }
+  .mlv2-loadmore{ display:block; }
+}
+@media (min-width: 769px){
+  .mlv2-loadmore{ display:none; }
+}
+
+
