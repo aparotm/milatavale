@@ -6,9 +6,40 @@ import { AppUser, UserRole } from "@/lib/types";
 
 const SESSION_COOKIE = "mlv_demo_user";
 const IMPERSONATOR_COOKIE = "mlv_admin_impersonator";
+const IMPERSONATED_USER_COOKIE = "mlv_impersonated_user";
+
+function parseImpersonatedUser(value: string | undefined): AppUser | null {
+  if (!value) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(value) as AppUser;
+    if (
+      parsed &&
+      typeof parsed.id === "string" &&
+      typeof parsed.role === "string" &&
+      typeof parsed.fullName === "string" &&
+      typeof parsed.rut === "string" &&
+      typeof parsed.email === "string"
+    ) {
+      return parsed;
+    }
+  } catch {}
+
+  return null;
+}
 
 export async function getSessionUser(): Promise<AppUser | null> {
   const cookieStore = await cookies();
+  const impersonatedUser = parseImpersonatedUser(
+    cookieStore.get(IMPERSONATED_USER_COOKIE)?.value,
+  );
+
+  if (impersonatedUser) {
+    return impersonatedUser;
+  }
+
   const userId = cookieStore.get(SESSION_COOKIE)?.value;
 
   if (!userId) {
@@ -53,4 +84,4 @@ export async function requireSessionUser(role?: UserRole): Promise<AppUser> {
   return user;
 }
 
-export { IMPERSONATOR_COOKIE, SESSION_COOKIE };
+export { IMPERSONATED_USER_COOKIE, IMPERSONATOR_COOKIE, SESSION_COOKIE };

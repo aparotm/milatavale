@@ -23,6 +23,7 @@ import {
   getUserById,
 } from "@/lib/data";
 import {
+  IMPERSONATED_USER_COOKIE,
   IMPERSONATOR_COOKIE,
   SESSION_COOKIE,
 } from "@/lib/session";
@@ -78,6 +79,7 @@ export async function loginAction(formData: FormData) {
     sameSite: "lax",
     path: "/",
   });
+  cookieStore.delete(IMPERSONATED_USER_COOKIE);
 
   redirect(`/panel/${user.role}`);
 }
@@ -86,6 +88,7 @@ export async function logoutAction() {
   const cookieStore = await cookies();
   cookieStore.delete(SESSION_COOKIE);
   cookieStore.delete(IMPERSONATOR_COOKIE);
+  cookieStore.delete(IMPERSONATED_USER_COOKIE);
   redirect("/login");
 }
 
@@ -127,6 +130,11 @@ export async function impersonateUserAction(formData: FormData) {
     sameSite: "lax",
     path: "/",
   });
+  cookieStore.set(IMPERSONATED_USER_COOKIE, JSON.stringify(targetUser), {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+  });
 
   redirect(`/panel/${targetUser.role}`);
 }
@@ -144,6 +152,7 @@ export async function stopImpersonationAction() {
   }
 
   cookieStore.delete(IMPERSONATOR_COOKIE);
+  cookieStore.delete(IMPERSONATED_USER_COOKIE);
   redirect("/panel/admin");
 }
 
