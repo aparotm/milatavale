@@ -47,3 +47,27 @@ export type AuditEntry = {
   createdAt: string;
   metadata?: Record<string, unknown>;
 };
+
+export type LocalHours = {
+  day: string;
+  open: boolean;
+  from: string;
+  to: string;
+};
+
+export type LocalProfile = {
+  id: string;
+  code: string;
+  name: string;
+  comuna?: string;
+  address?: string;
+  phone?: string;
+  hours: LocalHours[];
+};
+
+export type DiagnosticsSummary = {
+  duplicateRutCount: number;
+  inactiveUsers: number;
+  usersWithoutLocal: number;
+  pendingMovements: number;
+};

@@ -8,8 +8,11 @@ import {
   createClientForLocal,
   createGastoMovement,
   createIngresoMovement,
+  createIncentiveMovement,
   getUserByCredentials,
+  reverseMovement,
   setMovementRetirado,
+  updateLocalProfile,
 } from "@/lib/data";
 import { SESSION_COOKIE } from "@/lib/session";
 
@@ -196,4 +199,88 @@ export async function setRetiradoAction(formData: FormData) {
   revalidatePath("/panel/admin");
 
   redirect(`/panel/${backTo}`);
+}
+
+export async function createIncentiveAction(formData: FormData) {
+  const clientProfileId = String(formData.get("clientProfileId") ?? "");
+  const localCode = String(formData.get("localCode") ?? "");
+  const createdByProfileId = String(formData.get("createdByProfileId") ?? "");
+  const amount = parsePositiveInteger(formData.get("amount"));
+  const note = String(formData.get("note") ?? "");
+
+  try {
+    await createIncentiveMovement({
+      clientProfileId,
+      localCode,
+      createdByProfileId,
+      amount,
+      note,
+    });
+
+    revalidatePath("/panel/admin");
+    revalidatePath("/panel/cliente");
+    redirect("/panel/admin?tab=incentivos&success=Incentivo+registrado.");
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "No se pudo registrar el incentivo.";
+    redirect(`/panel/admin?tab=incentivos&error=${encodeURIComponent(message)}`);
+  }
+}
+
+export async function reverseMovementAction(formData: FormData) {
+  const movementId = String(formData.get("movementId") ?? "");
+  const actorProfileId = String(formData.get("actorProfileId") ?? "");
+  const note = String(formData.get("note") ?? "");
+
+  try {
+    await reverseMovement({
+      movementId,
+      actorProfileId,
+      note,
+    });
+
+    revalidatePath("/panel/admin");
+    revalidatePath("/panel/cliente");
+    redirect("/panel/admin?tab=movimientos&success=Reversa+registrada.");
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "No se pudo reversar el movimiento.";
+    redirect(`/panel/admin?tab=movimientos&error=${encodeURIComponent(message)}`);
+  }
+}
+
+export async function updateLocalProfileAction(formData: FormData) {
+  const localCode = String(formData.get("localCode") ?? "");
+  const actorProfileId = String(formData.get("actorProfileId") ?? "");
+  const name = String(formData.get("name") ?? "");
+  const comuna = String(formData.get("comuna") ?? "");
+  const address = String(formData.get("address") ?? "");
+  const phone = String(formData.get("phone") ?? "");
+  const days = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+
+  const hours = days.map((day, index) => ({
+    day,
+    open: String(formData.get(`day_${index}_open`) ?? "") === "1",
+    from: String(formData.get(`day_${index}_from`) ?? "08:30"),
+    to: String(formData.get(`day_${index}_to`) ?? "20:30"),
+  }));
+
+  try {
+    await updateLocalProfile({
+      localCode,
+      actorProfileId,
+      name,
+      comuna,
+      address,
+      phone,
+      hours,
+    });
+
+    revalidatePath("/panel/almacen");
+    redirect("/panel/almacen?tab=perfil&success=Perfil+actualizado.");
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "No se pudo actualizar el perfil.";
+    redirect(`/panel/almacen?tab=perfil&error=${encodeURIComponent(message)}`);
+  }
 }

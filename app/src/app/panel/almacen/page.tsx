@@ -6,10 +6,11 @@ import {
   createIngresoAction,
   previewGastoAction,
   previewIngresoAction,
+  updateLocalProfileAction,
 } from "@/app/actions";
 import { AppShell } from "@/components/shell";
 import { KpiCard, PanelCard } from "@/components/cards";
-import { getMovementsForLocal, getUsers } from "@/lib/data";
+import { getLocalProfile, getMovementsForLocal, getUsers } from "@/lib/data";
 import {
   formatCompactDate,
   formatMoney,
@@ -36,6 +37,7 @@ export default async function AlmacenPanelPage({
   const preview = getParam(params, "preview") === "1";
   const selectedClientId = getParam(params, "client");
   const movements = await getMovementsForLocal(user.localCode ?? "");
+  const localProfile = await getLocalProfile(user.localCode ?? "");
   const users = await getUsers();
   const clients = users.filter(
     (appUser) =>
@@ -119,6 +121,9 @@ export default async function AlmacenPanelPage({
           </Link>
           <Link className="primaryButton" href="/panel/almacen?tab=cliente">
             + Cliente
+          </Link>
+          <Link className="primaryButton" href="/panel/almacen?tab=perfil">
+            Perfil
           </Link>
         </div>
       }
@@ -510,6 +515,109 @@ export default async function AlmacenPanelPage({
             </div>
           </PanelCard>
         </>
+      ) : null}
+
+      {tab === "perfil" && localProfile ? (
+        <PanelCard
+          title="Tus Datos"
+          description="Ficha operativa del local y horario de atención."
+        >
+          {success ? <div className="successBox">{success}</div> : null}
+          {error ? <div className="errorBox">{error}</div> : null}
+          <form action={updateLocalProfileAction} className="formStack">
+            <input name="localCode" type="hidden" value={user.localCode ?? ""} />
+            <input name="actorProfileId" type="hidden" value={user.id} />
+            <div className="field">
+              <label htmlFor="local-name">Nombre del local</label>
+              <input
+                defaultValue={localProfile.name}
+                id="local-name"
+                name="name"
+                required
+                type="text"
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="local-comuna">Comuna</label>
+              <input
+                defaultValue={localProfile.comuna ?? ""}
+                id="local-comuna"
+                name="comuna"
+                type="text"
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="local-address">Dirección del local</label>
+              <input
+                defaultValue={localProfile.address ?? ""}
+                id="local-address"
+                name="address"
+                type="text"
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="local-phone">Teléfono</label>
+              <input
+                defaultValue={localProfile.phone ?? ""}
+                id="local-phone"
+                name="phone"
+                type="text"
+              />
+            </div>
+
+            <PanelCard title="Horario de atención">
+              <div className="panelGrid">
+                {localProfile.hours.map((hour, index) => (
+                  <div className="actionCard" key={hour.day}>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        gap: 12,
+                        marginBottom: 12,
+                      }}
+                    >
+                      <strong>{hour.day}</strong>
+                      <label
+                        style={{ display: "flex", alignItems: "center", gap: 8 }}
+                      >
+                        <input
+                          defaultChecked={hour.open}
+                          name={`day_${index}_open`}
+                          type="checkbox"
+                          value="1"
+                        />
+                        Abierto
+                      </label>
+                    </div>
+                    <input name={`day_${index}_label`} type="hidden" value={hour.day} />
+                    <div className="field">
+                      <label>De</label>
+                      <input
+                        defaultValue={hour.from}
+                        name={`day_${index}_from`}
+                        type="time"
+                      />
+                    </div>
+                    <div className="field">
+                      <label>A</label>
+                      <input
+                        defaultValue={hour.to}
+                        name={`day_${index}_to`}
+                        type="time"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </PanelCard>
+
+            <button className="primaryButton" type="submit">
+              Guardar perfil
+            </button>
+          </form>
+        </PanelCard>
       ) : null}
     </AppShell>
   );

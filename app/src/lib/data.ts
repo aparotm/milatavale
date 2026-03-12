@@ -1,9 +1,26 @@
 import { demoMovements, demoUsers } from "@/lib/demo-data";
 import { hasSupabaseEnv } from "@/lib/env";
 import { getSupabaseServerClient } from "@/lib/supabase";
-import { AppUser, AuditEntry, LedgerMovement, UserRole } from "@/lib/types";
+import {
+  AppUser,
+  AuditEntry,
+  DiagnosticsSummary,
+  LedgerMovement,
+  LocalHours,
+  LocalProfile,
+  UserRole,
+} from "@/lib/types";
 
 const DEFAULT_VALUE_PER_CAN = 10;
+const DEFAULT_HOURS: LocalHours[] = [
+  { day: "Lunes", open: true, from: "08:30", to: "20:30" },
+  { day: "Martes", open: true, from: "08:30", to: "20:30" },
+  { day: "Miércoles", open: true, from: "08:30", to: "20:30" },
+  { day: "Jueves", open: true, from: "08:30", to: "20:30" },
+  { day: "Viernes", open: true, from: "08:30", to: "20:30" },
+  { day: "Sábado", open: true, from: "09:00", to: "14:00" },
+  { day: "Domingo", open: false, from: "09:00", to: "14:00" },
+];
 
 function mapDemoUsers(): AppUser[] {
   return demoUsers.map((user) => ({
@@ -36,6 +53,23 @@ function pickRelation<T>(value: T | T[] | null | undefined): T | null {
 
 function normalizeRut(value: string) {
   return value.replace(/[^0-9kK]/g, "").toUpperCase();
+}
+
+function parseHours(value: unknown): LocalHours[] {
+  if (!Array.isArray(value) || value.length === 0) {
+    return DEFAULT_HOURS;
+  }
+
+  return value.map((row, index) => {
+    const source =
+      typeof row === "object" && row !== null ? (row as Record<string, unknown>) : {};
+    return {
+      day: String(source.day ?? DEFAULT_HOURS[index]?.day ?? `Día ${index + 1}`),
+      open: Boolean(source.open ?? true),
+      from: String(source.from ?? "08:30"),
+      to: String(source.to ?? "20:30"),
+    };
+  });
 }
 
 async function getLocalByCode(localCode: string) {
@@ -296,6 +330,84 @@ export async function getAuditEntries(limit = 20): Promise<AuditEntry[]> {
   }));
 }
 
+export async function getDiagnosticsSummary(): Promise<DiagnosticsSummary> {
+  const users = await getUsers();
+  const movements = await getMovements();
+  const rutSet = new Set<string>();
+  let duplicateRutCount = 0;
+
+  users.forEach((user) => {
+    const norm = normalizeRut(user.rut);
+    if (rutSet.has(norm)) {
+      duplicateRutCount += 1;
+    } else {
+      rutSet.add(norm);
+    }
+  });
+
+  return {
+    duplicateRutCount,
+    inactiveUsers: 0,
+    usersWithoutLocal: users.filter(
+      (user) => user.role !== "admin" && !user.localCode,
+    ).length,
+    pendingMovements: movements.filter(
+      (movement) => movement.status === "pendiente_retiro",
+    ).length,
+  };
+}
+
+export async function getLocalProfile(localCode: string): Promise<LocalProfile | null> {
+  if (!hasSupabaseEnv()) {
+    return {
+      id: "demo-local",
+      code: localCode,
+      name: "Almacén Demo",
+      comuna: "Santiago",
+      address: "Av. Demo 123",
+      phone: "+56 9 2222 2222",
+      hours: DEFAULT_HOURS,
+    };
+  }
+
+  const supabase = getSupabaseServerClient();
+  if (!supabase) {
+    return null;
+  }
+
+  const { data, error } = await supabase
+    .from("locales")
+    .select(
+      `
+        id,
+        code,
+        name,
+        comuna,
+        address,
+        hours_json,
+        profiles!locales_admin_profile_id_fkey (
+          phone
+        )
+      `,
+    )
+    .eq("code", localCode)
+    .maybeSingle();
+
+  if (error || !data) {
+    return null;
+  }
+
+  return {
+    id: data.id,
+    code: data.code,
+    name: data.name,
+    comuna: data.comuna ?? undefined,
+    address: data.address ?? undefined,
+    phone: pickRelation(data.profiles)?.phone ?? undefined,
+    hours: parseHours(data.hours_json),
+  };
+}
+
 export async function createClientForLocal(input: {
   fullName: string;
   rut: string;
@@ -438,6 +550,69 @@ export async function createClientForLocal(input: {
   });
 
   return clientProfileId;
+}
+
+export async function updateLocalProfile(input: {
+  localCode: string;
+  actorProfileId: string;
+  name: string;
+  comuna?: string;
+  address?: string;
+  phone?: string;
+  hours: LocalHours[];
+}) {
+  if (!hasSupabaseEnv()) {
+    throw new Error("Supabase no está configurado.");
+  }
+
+  const supabase = getSupabaseServerClient();
+  if (!supabase) {
+    throw new Error("No fue posible conectar con Supabase.");
+  }
+
+  const local = await getLocalByCode(input.localCode);
+  if (!local) {
+    throw new Error("No se encontró el local.");
+  }
+
+  const { error: localError } = await supabase
+    .from("locales")
+    .update({
+      name: input.name.trim(),
+      comuna: input.comuna?.trim() || null,
+      address: input.address?.trim() || null,
+      hours_json: input.hours,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", local.id);
+
+  if (localError) {
+    throw new Error("No se pudo actualizar el local.");
+  }
+
+  const { error: profileError } = await supabase
+    .from("profiles")
+    .update({
+      local_name: input.name.trim(),
+      phone: input.phone?.trim() || null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", input.actorProfileId);
+
+  if (profileError) {
+    throw new Error("No se pudo actualizar el perfil del almacén.");
+  }
+
+  await addAuditLog({
+    actorProfileId: input.actorProfileId,
+    action: "local_update",
+    objectType: "local",
+    objectId: local.id,
+    afterData: {
+      code: input.localCode,
+      name: input.name,
+    },
+  });
 }
 
 export async function createIngresoMovement(input: {
@@ -614,6 +789,139 @@ export async function setMovementRetirado(input: {
     objectId: input.movementId,
     afterData: {
       status: nextStatus,
+    },
+  });
+}
+
+export async function createIncentiveMovement(input: {
+  clientProfileId: string;
+  localCode: string;
+  createdByProfileId: string;
+  amount: number;
+  note?: string;
+}) {
+  if (!hasSupabaseEnv()) {
+    throw new Error("Supabase no está configurado.");
+  }
+
+  if (!Number.isFinite(input.amount) || input.amount <= 0) {
+    throw new Error("El incentivo debe ser mayor a cero.");
+  }
+
+  const supabase = getSupabaseServerClient();
+  if (!supabase) {
+    throw new Error("No fue posible conectar con Supabase.");
+  }
+
+  const local = await getLocalByCode(input.localCode);
+  if (!local) {
+    throw new Error("No se encontró el local.");
+  }
+
+  const { data, error } = await supabase
+    .from("movements")
+    .insert({
+      type: "incentivo",
+      client_profile_id: input.clientProfileId,
+      local_id: local.id,
+      created_by_profile_id: input.createdByProfileId,
+      can_count: 0,
+      value_per_can: 0,
+      amount: input.amount,
+      balance_origin: "incentivo",
+      movement_classification: "operacion",
+      logistic_status: "retirado",
+      detail: {
+        note: input.note?.trim() || "Incentivo admin",
+        source: "admin_incentivo",
+      },
+    })
+    .select("id")
+    .single();
+
+  if (error || !data) {
+    throw new Error("No se pudo registrar el incentivo.");
+  }
+
+  await addAuditLog({
+    actorProfileId: input.createdByProfileId,
+    action: "movimiento_incentivo_create",
+    objectType: "movement",
+    objectId: data.id,
+    afterData: {
+      amount: input.amount,
+    },
+  });
+}
+
+export async function reverseMovement(input: {
+  movementId: string;
+  actorProfileId: string;
+  note?: string;
+}) {
+  if (!hasSupabaseEnv()) {
+    throw new Error("Supabase no está configurado.");
+  }
+
+  const supabase = getSupabaseServerClient();
+  if (!supabase) {
+    throw new Error("No fue posible conectar con Supabase.");
+  }
+
+  const { data: original, error: originalError } = await supabase
+    .from("movements")
+    .select(
+      "id, type, client_profile_id, local_id, can_count, value_per_can, amount, logistic_status, detail",
+    )
+    .eq("id", input.movementId)
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  if (originalError || !original) {
+    throw new Error("No se encontró el movimiento a reversar.");
+  }
+
+  const detail =
+    typeof original.detail === "object" && original.detail !== null
+      ? original.detail
+      : {};
+
+  const { data: inserted, error: insertError } = await supabase
+    .from("movements")
+    .insert({
+      type: "ajuste",
+      client_profile_id: original.client_profile_id,
+      local_id: original.local_id,
+      created_by_profile_id: input.actorProfileId,
+      movement_ref_id: original.id,
+      can_count: 0,
+      value_per_can: 0,
+      amount: -Number(original.amount),
+      balance_origin: "ajuste",
+      movement_classification: "reversa",
+      logistic_status: "retirado",
+      is_system_adjustment: true,
+      detail: {
+        note: input.note?.trim() || "Reversa manual",
+        source: "admin_reverse",
+        original_type: original.type,
+        original_note: "note" in detail ? String(detail.note) : null,
+      },
+    })
+    .select("id")
+    .single();
+
+  if (insertError || !inserted) {
+    throw new Error("No se pudo registrar la reversa.");
+  }
+
+  await addAuditLog({
+    actorProfileId: input.actorProfileId,
+    action: "movimiento_reverse",
+    objectType: "movement",
+    objectId: inserted.id,
+    afterData: {
+      ref: input.movementId,
     },
   });
 }
