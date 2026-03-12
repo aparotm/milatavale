@@ -61,8 +61,8 @@ export default async function ClientePanelPage() {
       </PanelCard>
 
       <PanelCard
-        title="Tus movimientos"
-        description="Vista equivalente al historial del cliente en el plugin."
+        title="Movimientos"
+        description=""
       >
         <div className="tableWrap">
           <table>

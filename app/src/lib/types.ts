@@ -7,6 +7,7 @@ export type DemoUser = {
   role: UserRole;
   fullName: string;
   rut: string;
+  phone?: string;
   localCode?: string;
   localName?: string;
 };
@@ -18,6 +19,7 @@ export type AppUser = {
   role: UserRole;
   fullName: string;
   rut: string;
+  phone?: string;
   localCode?: string;
   localName?: string;
 };

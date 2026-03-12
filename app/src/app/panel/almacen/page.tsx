@@ -160,6 +160,14 @@ export default async function AlmacenPanelPage({
                   </strong>
                 </div>
               </div>
+              {getParam(params, "evidenceUrl") ? (
+                <div className="imagePreview" style={{ marginBottom: 14 }}>
+                  <img
+                    alt="Evidencia subida"
+                    src={getParam(params, "evidenceUrl")}
+                  />
+                </div>
+              ) : null}
 
               <form action={createIngresoAction} className="formStack">
                 <input name="localCode" type="hidden" value={user.localCode ?? ""} />
@@ -268,6 +276,14 @@ export default async function AlmacenPanelPage({
                   </strong>
                 </div>
               </div>
+              {getParam(params, "evidenceUrl") ? (
+                <div className="imagePreview" style={{ marginBottom: 14 }}>
+                  <img
+                    alt="Evidencia subida"
+                    src={getParam(params, "evidenceUrl")}
+                  />
+                </div>
+              ) : null}
 
               <form action={createGastoAction} className="formStack">
                 <input name="localCode" type="hidden" value={user.localCode ?? ""} />
@@ -449,20 +465,59 @@ export default async function AlmacenPanelPage({
           </PanelCard>
 
           <PanelCard
-            title="Movimientos del local"
+            title="Tus clientes"
             description={
               selectedClient
                 ? `Filtrados para ${selectedClient.fullName}.`
-                : "Todos los movimientos del almacén."
+                : "Generado, canjeado y consolidado por cliente en este local."
             }
           >
+            <div className="tableWrap" style={{ marginBottom: 16 }}>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Nombre completo</th>
+                    <th>RUT</th>
+                    <th>Teléfono</th>
+                    <th>Ingresos reciclaje</th>
+                    <th>Ingresos incentivos</th>
+                    <th>Canjeado</th>
+                    <th>Saldo</th>
+                    <th>Latas</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {clientRows.map((client) => (
+                    <tr key={client.id}>
+                      <td>{client.fullName}</td>
+                      <td>{client.rut}</td>
+                      <td>{client.phone ?? "—"}</td>
+                      <td>{formatMoney(client.generated)}</td>
+                      <td>{formatMoney(client.incentives)}</td>
+                      <td>{formatMoney(client.canjeado)}</td>
+                      <td>{formatMoney(client.balance)}</td>
+                      <td>{client.cans}</td>
+                      <td>
+                        <Link
+                          className="ghostButton"
+                          href={`/panel/almacen?tab=panel&client=${client.id}`}
+                        >
+                          {selectedClient?.id === client.id ? "Viendo" : "Ver"}
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
             <div className="tableWrap">
               <table>
                 <thead>
                   <tr>
                     <th>Fecha</th>
                     <th>Tipo</th>
-                    <th>Cliente</th>
+                    <th>Nombre local</th>
                     <th>RUT</th>
                     <th>Latas</th>
                     <th>Valor por lata</th>
@@ -476,7 +531,7 @@ export default async function AlmacenPanelPage({
                     <tr key={movement.id}>
                       <td>{formatCompactDate(movement.createdAt)}</td>
                       <td>{movementLabel(movement.type)}</td>
-                      <td>{movement.clientName}</td>
+                      <td>{user.localName ?? movement.localName ?? movement.localCode}</td>
                       <td>{movement.clientRut}</td>
                       <td>{movement.type === "gasto" ? "—" : movement.canCount || "—"}</td>
                       <td>{movement.type === "gasto" ? "—" : "$10"}</td>

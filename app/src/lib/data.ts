@@ -31,6 +31,7 @@ function mapDemoUsers(): AppUser[] {
     role: user.role,
     fullName: user.fullName,
     rut: user.rut,
+    phone: user.phone,
     localCode: user.localCode,
     localName: user.localName,
   }));
@@ -201,7 +202,7 @@ export async function getUsers(): Promise<AppUser[]> {
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, email, role, full_name, rut, local_code, local_name")
+    .select("id, email, role, full_name, rut, phone, local_code, local_name")
     .eq("active", true)
     .order("created_at", { ascending: true });
 
@@ -215,6 +216,7 @@ export async function getUsers(): Promise<AppUser[]> {
     role: row.role as UserRole,
     fullName: row.full_name,
     rut: row.rut,
+    phone: row.phone ?? undefined,
     localCode: row.local_code ?? undefined,
     localName: row.local_name ?? undefined,
   }));
@@ -246,7 +248,7 @@ export async function getUserByCredentials(
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, email, role, full_name, rut, local_code, local_name")
+    .select("id, email, role, full_name, rut, phone, local_code, local_name")
     .eq("active", true)
     .or(`email.eq.${emailOrRut},rut_norm.eq.${normalizeRut(emailOrRut)}`)
     .limit(1);
@@ -267,6 +269,7 @@ export async function getUserByCredentials(
     role: row.role as UserRole,
     fullName: row.full_name,
     rut: row.rut,
+    phone: row.phone ?? undefined,
     localCode: row.local_code ?? undefined,
     localName: row.local_name ?? undefined,
   };
