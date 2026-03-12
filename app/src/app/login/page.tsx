@@ -10,17 +10,14 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
   return (
     <main className="loginPage">
-      <section className="loginCard" style={{ maxWidth: 560 }}>
-        <div
-          style={{
-            display: "grid",
-            justifyItems: "center",
-            gap: 20,
-            marginBottom: 20,
-          }}
-        >
+      <section className="loginCard">
+        <div className="loginBrandBlock">
           <div className="brandMark">
             <span>MI LATA VALE</span>
+          </div>
+          <div>
+            <p className="eyebrow">Acceso operativo</p>
+            <h1 className="loginTitle">Entrar</h1>
           </div>
         </div>
 
