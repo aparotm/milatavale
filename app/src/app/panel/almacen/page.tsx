@@ -1,3 +1,8 @@
+import {
+  createClientAction,
+  createGastoAction,
+  createIngresoAction,
+} from "@/app/actions";
 import { AppShell } from "@/components/shell";
 import { DetailTable, KpiCard, PanelCard } from "@/components/cards";
 import { getMovementsForLocal, getUsers } from "@/lib/data";
@@ -9,14 +14,22 @@ import {
 } from "@/lib/format";
 import { requireSessionUser } from "@/lib/session";
 
-export default async function AlmacenPanelPage() {
+export default async function AlmacenPanelPage({
+  searchParams,
+}: {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const user = await requireSessionUser("almacen");
+  const params = searchParams ? await searchParams : undefined;
   const movements = await getMovementsForLocal(user.localCode ?? "");
   const users = await getUsers();
   const clients = users.filter(
     (appUser) =>
       appUser.role === "cliente" && appUser.localCode === user.localCode,
   );
+  const success =
+    typeof params?.success === "string" ? params.success : undefined;
+  const error = typeof params?.error === "string" ? params.error : undefined;
 
   const generated = movements
     .filter((movement) => movement.amount > 0)
@@ -87,29 +100,138 @@ export default async function AlmacenPanelPage() {
         </PanelCard>
 
         <PanelCard
-          title="Acciones próximas"
-          description="Bloques siguientes para completar paridad funcional."
+          title="Registrar latas"
+          description="Crea un ingreso real en el ledger con estado pendiente de retiro."
         >
-          <div className="actionRow">
-            <div className="actionCard">
-              <strong>Registrar latas</strong>
-              <p className="muted">Ingreso con confirmación y evidencia.</p>
+          <form action={createIngresoAction} className="formStack">
+            <input name="localCode" type="hidden" value={user.localCode ?? ""} />
+            <input
+              name="createdByProfileId"
+              type="hidden"
+              value={user.id}
+            />
+            <div className="field">
+              <label htmlFor="ingreso-client">Cliente</label>
+              <select id="ingreso-client" name="clientProfileId" required>
+                <option value="">Seleccionar cliente</option>
+                {clients.map((client) => (
+                  <option key={client.id} value={client.id}>
+                    {client.fullName} · {client.rut}
+                  </option>
+                ))}
+              </select>
             </div>
-            <div className="actionCard">
-              <strong>Registrar gasto</strong>
-              <p className="muted">Descuento de saldo por cliente.</p>
+            <div className="field">
+              <label htmlFor="ingreso-cans">Cantidad de latas</label>
+              <input
+                id="ingreso-cans"
+                min="1"
+                name="canCount"
+                required
+                type="number"
+              />
             </div>
-            <div className="actionCard">
-              <strong>Registrar cliente</strong>
-              <p className="muted">Alta y asociación directa al local.</p>
+            <div className="field">
+              <label htmlFor="ingreso-note">Nota</label>
+              <textarea
+                id="ingreso-note"
+                name="note"
+                placeholder="Registro de latas del almacén"
+                rows={3}
+              />
             </div>
-          </div>
+            <button className="primaryButton" type="submit">
+              Guardar ingreso
+            </button>
+          </form>
+        </PanelCard>
+
+        <PanelCard
+          title="Registrar gasto"
+          description="Descuenta saldo disponible del cliente de forma inmediata."
+        >
+          <form action={createGastoAction} className="formStack">
+            <input name="localCode" type="hidden" value={user.localCode ?? ""} />
+            <input
+              name="createdByProfileId"
+              type="hidden"
+              value={user.id}
+            />
+            <div className="field">
+              <label htmlFor="gasto-client">Cliente</label>
+              <select id="gasto-client" name="clientProfileId" required>
+                <option value="">Seleccionar cliente</option>
+                {clientRows.map((client) => (
+                  <option key={client.id} value={client.id}>
+                    {client.fullName} · saldo {formatMoney(client.balance)}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="field">
+              <label htmlFor="gasto-amount">Monto</label>
+              <input
+                id="gasto-amount"
+                min="1"
+                name="amount"
+                required
+                type="number"
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="gasto-note">Detalle</label>
+              <textarea
+                id="gasto-note"
+                name="note"
+                placeholder="Canje de saldo"
+                rows={3}
+              />
+            </div>
+            <button className="primaryButton" type="submit">
+              Guardar gasto
+            </button>
+          </form>
+        </PanelCard>
+
+        <PanelCard
+          title="Registrar cliente"
+          description="Alta simple para poblar el local antes del registro público."
+        >
+          <form action={createClientAction} className="formStack">
+            <input name="localCode" type="hidden" value={user.localCode ?? ""} />
+            <input
+              name="createdByProfileId"
+              type="hidden"
+              value={user.id}
+            />
+            <div className="field">
+              <label htmlFor="client-full-name">Nombre completo</label>
+              <input id="client-full-name" name="fullName" required type="text" />
+            </div>
+            <div className="field">
+              <label htmlFor="client-rut">RUT</label>
+              <input id="client-rut" name="rut" required type="text" />
+            </div>
+            <div className="field">
+              <label htmlFor="client-email">Email</label>
+              <input id="client-email" name="email" type="email" />
+            </div>
+            <div className="field">
+              <label htmlFor="client-phone">Teléfono</label>
+              <input id="client-phone" name="phone" type="text" />
+            </div>
+            <button className="primaryButton" type="submit">
+              Crear o asociar cliente
+            </button>
+          </form>
         </PanelCard>
 
         <PanelCard
           title="Clientes asociados"
           description="Saldo y actividad resumida por cliente."
         >
+          {success ? <div className="successBox">{success}</div> : null}
+          {error ? <div className="errorBox">{error}</div> : null}
           <div className="tableWrap">
             <table>
               <thead>
@@ -152,6 +274,7 @@ export default async function AlmacenPanelPage() {
                   <th>Latas</th>
                   <th>Monto</th>
                   <th>Estado</th>
+                  <th>Detalle</th>
                 </tr>
               </thead>
               <tbody>
@@ -163,6 +286,7 @@ export default async function AlmacenPanelPage() {
                     <td>{movement.canCount || "—"}</td>
                     <td>{formatMoney(movement.amount)}</td>
                     <td>{statusLabel(movement.status)}</td>
+                    <td>{movement.note ?? "—"}</td>
                   </tr>
                 ))}
               </tbody>

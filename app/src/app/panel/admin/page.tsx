@@ -13,6 +13,12 @@ export default async function AdminPanelPage() {
   const user = await requireSessionUser("admin");
   const users = await getUsers();
   const movements = await getMovements();
+  const totalGenerated = movements
+    .filter((movement) => movement.amount > 0)
+    .reduce((sum, movement) => sum + movement.amount, 0);
+  const totalSpent = movements
+    .filter((movement) => movement.amount < 0)
+    .reduce((sum, movement) => sum + Math.abs(movement.amount), 0);
 
   const totalBalance = movements.reduce((sum, movement) => sum + movement.amount, 0);
   const pendingPickups = movements.filter(
@@ -45,16 +51,29 @@ export default async function AdminPanelPage() {
         <KpiCard label="Gestores" value={String(usersByRole.gestor)} />
       </div>
 
+      <div className="kpiGrid">
+        <KpiCard label="Reciclaje total" value={formatMoney(totalGenerated)} />
+        <KpiCard label="Canjes total" value={formatMoney(totalSpent)} />
+        <KpiCard
+          label="Ingresos"
+          value={String(movements.filter((item) => item.type === "ingreso").length)}
+        />
+        <KpiCard
+          label="Gastos"
+          value={String(movements.filter((item) => item.type === "gasto").length)}
+        />
+      </div>
+
       <div className="panelGrid">
         <PanelCard
           title="Módulos administrativos"
-          description="Siguiente objetivo: emular el admin de WordPress con mejor estructura."
+          description="Primera réplica útil del backoffice del plugin."
         >
           <ul className="heroList">
-            <li>Movimientos globales con KPIs y filtros</li>
-            <li>Usuarios por rol y local</li>
-            <li>Base para incentivos, reversas y ajustes</li>
-            <li>Diagnóstico, auditoría y exportables en la siguiente iteración</li>
+            <li>Ledger global con lectura por fecha, cliente y local</li>
+            <li>Usuarios por rol y local operativo</li>
+            <li>Base preparada para incentivos, reversas y ajustes</li>
+            <li>Diagnóstico, auditoría y exportables quedan como siguiente bloque</li>
           </ul>
         </PanelCard>
 
@@ -93,9 +112,12 @@ export default async function AdminPanelPage() {
                   <th>Fecha</th>
                   <th>Tipo</th>
                   <th>Cliente</th>
+                  <th>RUT</th>
                   <th>Local</th>
+                  <th>Latas</th>
                   <th>Monto</th>
                   <th>Estado</th>
+                  <th>Detalle</th>
                 </tr>
               </thead>
               <tbody>
@@ -112,9 +134,12 @@ export default async function AdminPanelPage() {
                       </span>
                     </td>
                     <td>{movement.clientName}</td>
+                    <td>{movement.clientRut}</td>
                     <td>{movement.localCode}</td>
+                    <td>{movement.canCount || "—"}</td>
                     <td>{formatMoney(movement.amount)}</td>
                     <td>{statusLabel(movement.status)}</td>
+                    <td>{movement.note ?? "—"}</td>
                   </tr>
                 ))}
               </tbody>
