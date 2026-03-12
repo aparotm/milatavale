@@ -8,13 +8,25 @@ const SESSION_COOKIE = "mlv_demo_user";
 const IMPERSONATOR_COOKIE = "mlv_admin_impersonator";
 const IMPERSONATED_USER_COOKIE = "mlv_impersonated_user";
 
+function decodeImpersonatedUser(value: string | undefined) {
+  if (!value) {
+    return "";
+  }
+
+  try {
+    return Buffer.from(value, "base64url").toString("utf8");
+  } catch {
+    return "";
+  }
+}
+
 function parseImpersonatedUser(value: string | undefined): AppUser | null {
   if (!value) {
     return null;
   }
 
   try {
-    const parsed = JSON.parse(value) as AppUser;
+    const parsed = JSON.parse(decodeImpersonatedUser(value)) as AppUser;
     if (
       parsed &&
       typeof parsed.id === "string" &&

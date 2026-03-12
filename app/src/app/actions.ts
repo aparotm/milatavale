@@ -130,11 +130,15 @@ export async function impersonateUserAction(formData: FormData) {
     sameSite: "lax",
     path: "/",
   });
-  cookieStore.set(IMPERSONATED_USER_COOKIE, JSON.stringify(targetUser), {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-  });
+  cookieStore.set(
+    IMPERSONATED_USER_COOKIE,
+    Buffer.from(JSON.stringify(targetUser), "utf8").toString("base64url"),
+    {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+    },
+  );
 
   redirect(`/panel/${targetUser.role}`);
 }
