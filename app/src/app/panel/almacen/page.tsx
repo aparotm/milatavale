@@ -230,11 +230,10 @@ export default async function AlmacenPanelPage({
               <div className="field">
                 <label htmlFor="ingreso-evidence">Evidencia (opcional)</label>
                 <input
-                  defaultValue={getParam(params, "evidenceUrl")}
                   id="ingreso-evidence"
-                  name="evidenceUrl"
-                  placeholder="https://..."
-                  type="url"
+                  accept="image/*"
+                  name="evidence"
+                  type="file"
                 />
               </div>
               <button className="primaryButton" type="submit">
@@ -343,11 +342,10 @@ export default async function AlmacenPanelPage({
               <div className="field">
                 <label htmlFor="gasto-evidence">Evidencia (opcional)</label>
                 <input
-                  defaultValue={getParam(params, "evidenceUrl")}
                   id="gasto-evidence"
-                  name="evidenceUrl"
-                  placeholder="https://..."
-                  type="url"
+                  accept="image/*"
+                  name="evidence"
+                  type="file"
                 />
               </div>
               <button className="primaryButton" type="submit">

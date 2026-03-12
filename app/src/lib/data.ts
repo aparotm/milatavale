@@ -56,6 +56,39 @@ function normalizeRut(value: string) {
   return value.replace(/[^0-9kK]/g, "").toUpperCase();
 }
 
+function splitCsvLine(line: string) {
+  const cells: string[] = [];
+  let current = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i += 1) {
+    const char = line[i];
+    const next = line[i + 1];
+
+    if (char === '"' && inQuotes && next === '"') {
+      current += '"';
+      i += 1;
+      continue;
+    }
+
+    if (char === '"') {
+      inQuotes = !inQuotes;
+      continue;
+    }
+
+    if (char === "," && !inQuotes) {
+      cells.push(current.trim());
+      current = "";
+      continue;
+    }
+
+    current += char;
+  }
+
+  cells.push(current.trim());
+  return cells;
+}
+
 function parseHours(value: unknown): LocalHours[] {
   if (!Array.isArray(value) || value.length === 0) {
     return DEFAULT_HOURS;
@@ -113,6 +146,47 @@ async function addAuditLog(input: {
     after_data: input.afterData ?? null,
     metadata: input.metadata ?? {},
   });
+}
+
+export async function uploadEvidenceFile(file: File) {
+  if (!hasSupabaseEnv()) {
+    throw new Error("Supabase no está configurado.");
+  }
+
+  const supabase = getSupabaseServerClient();
+  if (!supabase) {
+    throw new Error("No fue posible conectar con Supabase.");
+  }
+
+  if (!file || file.size === 0) {
+    return "";
+  }
+
+  const bucket = "evidencias";
+  await supabase.storage.createBucket(bucket, {
+    public: true,
+    fileSizeLimit: 5 * 1024 * 1024,
+  });
+
+  const extension = file.name.includes(".")
+    ? file.name.split(".").pop()
+    : "jpg";
+  const path = `${new Date().toISOString().slice(0, 10)}/${crypto.randomUUID()}.${extension}`;
+  const arrayBuffer = await file.arrayBuffer();
+
+  const { error } = await supabase.storage
+    .from(bucket)
+    .upload(path, arrayBuffer, {
+      contentType: file.type || "application/octet-stream",
+      upsert: false,
+    });
+
+  if (error) {
+    throw new Error("No se pudo subir la evidencia.");
+  }
+
+  const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+  return data.publicUrl;
 }
 
 export async function getUsers(): Promise<AppUser[]> {
@@ -384,6 +458,172 @@ export async function getDuplicateRutGroups(): Promise<DuplicateRutGroup[]> {
         ]),
       ),
     }));
+}
+
+export async function createPublicProfileRegistration(input: {
+  role: "cliente" | "almacen" | "gestor";
+  fullName: string;
+  rut: string;
+  email?: string;
+  phone?: string;
+  localCode?: string;
+  localName?: string;
+  comuna?: string;
+  address?: string;
+}) {
+  if (!hasSupabaseEnv()) {
+    throw new Error("Supabase no está configurado.");
+  }
+
+  const supabase = getSupabaseServerClient();
+  if (!supabase) {
+    throw new Error("No fue posible conectar con Supabase.");
+  }
+
+  const fullName = input.fullName.trim();
+  const rut = input.rut.trim();
+  const rutNorm = normalizeRut(rut);
+  const email =
+    input.email?.trim().toLowerCase() ||
+    `${input.role}.${rutNorm.toLowerCase()}@registro.milatavale.app`;
+
+  if (!fullName || !rutNorm) {
+    throw new Error("Nombre y RUT son obligatorios.");
+  }
+
+  const { data: existing } = await supabase
+    .from("profiles")
+    .select("id")
+    .or(`rut_norm.eq.${rutNorm},email.eq.${email}`)
+    .maybeSingle();
+
+  if (existing) {
+    throw new Error("Ya existe un usuario con ese RUT o email.");
+  }
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .insert({
+      role: input.role,
+      email,
+      full_name: fullName,
+      rut,
+      rut_norm: rutNorm,
+      phone: input.phone?.trim() || null,
+      local_code: input.localCode?.trim() || null,
+      local_name: input.localName?.trim() || null,
+      active: true,
+      metadata: {
+        registration_source: "public_form",
+        comuna: input.comuna?.trim() || null,
+        address: input.address?.trim() || null,
+      },
+    })
+    .select("id")
+    .single();
+
+  if (error || !data) {
+    throw new Error("No se pudo registrar el usuario.");
+  }
+
+  if (input.role === "almacen" && input.localCode && input.localName) {
+    await supabase.from("locales").upsert(
+      {
+        code: input.localCode.trim(),
+        name: input.localName.trim(),
+        comuna: input.comuna?.trim() || null,
+        address: input.address?.trim() || null,
+        admin_profile_id: data.id,
+      },
+      {
+        onConflict: "code",
+      },
+    );
+  }
+
+  return data.id;
+}
+
+export async function importMovementsCsv(input: {
+  csvText: string;
+  actorProfileId: string;
+}) {
+  const lines = input.csvText
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  if (lines.length < 2) {
+    throw new Error("El CSV no tiene filas para importar.");
+  }
+
+  const header = splitCsvLine(lines[0]).map((cell) => cell.toLowerCase());
+  const rows = lines.slice(1).map((line) => splitCsvLine(line));
+  const col = (name: string) => header.indexOf(name);
+  const results: string[] = [];
+
+  for (const row of rows) {
+    const mode = row[col("mode")] || "ajuste";
+    const rut = row[col("rut")] || "";
+    const localCode = row[col("local_code")] || "";
+    const amount = Number.parseInt(row[col("amount")] || "0", 10) || 0;
+    const note = row[col("note")] || "";
+    const type = row[col("type")] || "abonar";
+    const canCount = Number.parseInt(row[col("can_count")] || "0", 10) || 0;
+    const valuePerCan = Number.parseInt(row[col("value_per_can")] || "10", 10) || 10;
+
+    const users = await getUsers();
+    const client = users.find(
+      (user) => user.role === "cliente" && normalizeRut(user.rut) === normalizeRut(rut),
+    );
+
+    if (!client || !localCode) {
+      results.push(`Saltado: ${rut}`);
+      continue;
+    }
+
+    if (mode === "regularizacion") {
+      await createHistoricalRegularization({
+        clientProfileId: client.id,
+        localCode,
+        createdByProfileId: input.actorProfileId,
+        amount,
+        canCount,
+        valuePerCan,
+        note,
+        type:
+          type === "saldo_preexistente" || type === "ajuste_excepcional"
+            ? type
+            : "latas_preexistentes",
+      });
+      results.push(`Regularizado: ${rut}`);
+      continue;
+    }
+
+    if (mode === "incentivo") {
+      await createIncentiveMovement({
+        clientProfileId: client.id,
+        localCode,
+        createdByProfileId: input.actorProfileId,
+        amount,
+        note,
+      });
+      results.push(`Incentivo: ${rut}`);
+      continue;
+    }
+
+    await createAdjustmentMovement({
+      clientProfileId: client.id,
+      localCode,
+      createdByProfileId: input.actorProfileId,
+      amount,
+      direction: type === "descontar" ? "descontar" : "abonar",
+      note,
+    });
+    results.push(`Ajuste: ${rut}`);
+  }
+
+  return results;
 }
 
 export async function getLocalProfile(localCode: string): Promise<LocalProfile | null> {

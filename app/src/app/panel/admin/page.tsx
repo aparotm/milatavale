@@ -4,6 +4,7 @@ import {
   createAdjustmentAction,
   createIncentiveAction,
   createRegularizationAction,
+  importCsvAction,
   mergeClientsAction,
   reverseMovementAction,
 } from "@/app/actions";
@@ -81,6 +82,9 @@ export default async function AdminPanelPage({
           </Link>
           <Link className="primaryButton" href="/panel/admin?tab=diagnostico">
             Diagnóstico
+          </Link>
+          <Link className="primaryButton" href="/panel/admin?tab=importar">
+            Importar CSV
           </Link>
           <a className="primaryButton" href="/panel/admin/export">
             Export CSV
@@ -505,6 +509,35 @@ export default async function AdminPanelPage({
                 </div>
               ))
             )}
+          </PanelCard>
+        </div>
+      ) : null}
+
+      {tab === "importar" ? (
+        <div className="panelGrid">
+          <PanelCard
+            title="Importar CSV"
+            description="Carga masiva para ajustes, incentivos o regularización."
+          >
+            <div className="infoBox">
+              Columnas esperadas: `mode,rut,local_code,type,amount,note,can_count,value_per_can`
+            </div>
+            <form action={importCsvAction} className="formStack">
+              <input name="actorProfileId" type="hidden" value={user.id} />
+              <div className="field">
+                <label htmlFor="csv-file">Archivo CSV</label>
+                <input
+                  accept=".csv,text/csv"
+                  id="csv-file"
+                  name="csvFile"
+                  required
+                  type="file"
+                />
+              </div>
+              <button className="primaryButton" type="submit">
+                Importar
+              </button>
+            </form>
           </PanelCard>
         </div>
       ) : null}

@@ -22,6 +22,9 @@ export default async function HomePage() {
               <Link className="primaryButton" href="/login">
                 Entrar al prototipo
               </Link>
+              <Link className="secondaryButton" href="/registro">
+                Registro público
+              </Link>
               <Link className="secondaryButton" href="/panel/admin">
                 Ver panel admin demo
               </Link>
@@ -36,6 +39,8 @@ export default async function HomePage() {
               <li>Paneles separados por rol</li>
               <li>KPIs por usuario y local</li>
               <li>Estados logísticos y saldo contable diferenciados</li>
+              <li>Registro público por tipo de usuario</li>
+              <li>Importación y exportación CSV para admin</li>
             </ul>
           </div>
         </div>

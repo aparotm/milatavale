@@ -11,10 +11,13 @@ import {
   createIngresoMovement,
   createIncentiveMovement,
   createHistoricalRegularization,
+  createPublicProfileRegistration,
   getUserByCredentials,
+  importMovementsCsv,
   mergeClientProfiles,
   reverseMovement,
   setMovementRetirado,
+  uploadEvidenceFile,
   updateLocalProfile,
 } from "@/lib/data";
 import { SESSION_COOKIE } from "@/lib/session";
@@ -81,20 +84,32 @@ export async function logoutAction() {
 }
 
 export async function previewIngresoAction(formData: FormData) {
+  const evidenceFile = formData.get("evidence");
+  const evidenceUrl =
+    evidenceFile instanceof File && evidenceFile.size > 0
+      ? await uploadEvidenceFile(evidenceFile)
+      : String(formData.get("evidenceUrl") ?? "");
+
   buildPreviewRedirect("ingreso", {
     clientProfileId: String(formData.get("clientProfileId") ?? ""),
     canCount: String(formData.get("canCount") ?? ""),
     note: String(formData.get("note") ?? ""),
-    evidenceUrl: String(formData.get("evidenceUrl") ?? ""),
+    evidenceUrl,
   });
 }
 
 export async function previewGastoAction(formData: FormData) {
+  const evidenceFile = formData.get("evidence");
+  const evidenceUrl =
+    evidenceFile instanceof File && evidenceFile.size > 0
+      ? await uploadEvidenceFile(evidenceFile)
+      : String(formData.get("evidenceUrl") ?? "");
+
   buildPreviewRedirect("gasto", {
     clientProfileId: String(formData.get("clientProfileId") ?? ""),
     amount: String(formData.get("amount") ?? ""),
     note: String(formData.get("note") ?? ""),
-    evidenceUrl: String(formData.get("evidenceUrl") ?? ""),
+    evidenceUrl,
   });
 }
 
@@ -367,5 +382,68 @@ export async function mergeClientsAction(formData: FormData) {
     const message =
       error instanceof Error ? error.message : "No se pudo fusionar el cliente.";
     redirect(`/panel/admin?tab=duplicados&error=${encodeURIComponent(message)}`);
+  }
+}
+
+export async function publicRegistrationAction(formData: FormData) {
+  const role = String(formData.get("role") ?? "") as
+    | "cliente"
+    | "almacen"
+    | "gestor";
+  const fullName = String(formData.get("fullName") ?? "");
+  const rut = String(formData.get("rut") ?? "");
+  const email = String(formData.get("email") ?? "");
+  const phone = String(formData.get("phone") ?? "");
+  const localCode = String(formData.get("localCode") ?? "");
+  const localName = String(formData.get("localName") ?? "");
+  const comuna = String(formData.get("comuna") ?? "");
+  const address = String(formData.get("address") ?? "");
+
+  try {
+    await createPublicProfileRegistration({
+      role,
+      fullName,
+      rut,
+      email,
+      phone,
+      localCode,
+      localName,
+      comuna,
+      address,
+    });
+
+    redirect(`/registro?role=${role}&success=Registro+enviado`);
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "No se pudo registrar el usuario.";
+    redirect(`/registro?role=${role}&error=${encodeURIComponent(message)}`);
+  }
+}
+
+export async function importCsvAction(formData: FormData) {
+  const actorProfileId = String(formData.get("actorProfileId") ?? "");
+  const file = formData.get("csvFile");
+
+  if (!(file instanceof File) || file.size === 0) {
+    redirect("/panel/admin?tab=importar&error=Debes+subir+un+CSV+válido.");
+  }
+
+  try {
+    const csvText = await file.text();
+    const results = await importMovementsCsv({
+      csvText,
+      actorProfileId,
+    });
+
+    revalidatePath("/panel/admin");
+    redirect(
+      `/panel/admin?tab=importar&success=${encodeURIComponent(
+        `Importación completada: ${results.length} fila(s).`,
+      )}`,
+    );
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "No se pudo importar el CSV.";
+    redirect(`/panel/admin?tab=importar&error=${encodeURIComponent(message)}`);
   }
 }
