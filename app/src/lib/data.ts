@@ -1,5 +1,9 @@
 import { demoMovements, demoUsers } from "@/lib/demo-data";
-import { hasSupabaseEnv, hasSupabaseServerEnv } from "@/lib/env";
+import {
+  getSupabaseEnvDiagnostic,
+  hasSupabaseEnv,
+  hasSupabaseServerEnv,
+} from "@/lib/env";
 import { getSupabaseServerClient } from "@/lib/supabase";
 import {
   AppUser,
@@ -22,6 +26,14 @@ const DEFAULT_HOURS: LocalHours[] = [
   { day: "Sábado", open: true, from: "09:00", to: "14:00" },
   { day: "Domingo", open: false, from: "09:00", to: "14:00" },
 ];
+
+function getBrowserEnvError() {
+  return getSupabaseEnvDiagnostic("browser") || "Supabase no está configurado.";
+}
+
+function getServerEnvError() {
+  return getSupabaseEnvDiagnostic("server") || "Supabase no está configurado.";
+}
 
 function mapDemoUsers(): AppUser[] {
   return demoUsers.map((user) => ({
@@ -151,7 +163,7 @@ async function addAuditLog(input: {
 
 export async function uploadEvidenceFile(file: File) {
   if (!hasSupabaseServerEnv()) {
-    throw new Error("Supabase no está configurado.");
+    throw new Error(getServerEnvError());
   }
 
   const supabase = getSupabaseServerClient();
@@ -475,7 +487,7 @@ export async function createPublicProfileRegistration(input: {
   address?: string;
 }) {
   if (!hasSupabaseEnv()) {
-    throw new Error("Supabase no está configurado.");
+    throw new Error(getBrowserEnvError());
   }
 
   const supabase = getSupabaseServerClient();
@@ -688,8 +700,8 @@ export async function createClientForLocal(input: {
   localCode: string;
   createdByProfileId: string;
 }) {
-  if (!hasSupabaseEnv()) {
-    throw new Error("Supabase no está configurado.");
+  if (!hasSupabaseServerEnv()) {
+    throw new Error(getServerEnvError());
   }
 
   const supabase = getSupabaseServerClient();
@@ -833,8 +845,8 @@ export async function updateLocalProfile(input: {
   phone?: string;
   hours: LocalHours[];
 }) {
-  if (!hasSupabaseEnv()) {
-    throw new Error("Supabase no está configurado.");
+  if (!hasSupabaseServerEnv()) {
+    throw new Error(getServerEnvError());
   }
 
   const supabase = getSupabaseServerClient();
@@ -895,8 +907,8 @@ export async function createIngresoMovement(input: {
   note?: string;
   evidenceUrl?: string;
 }) {
-  if (!hasSupabaseEnv()) {
-    throw new Error("Supabase no está configurado.");
+  if (!hasSupabaseServerEnv()) {
+    throw new Error(getServerEnvError());
   }
 
   if (!Number.isFinite(input.canCount) || input.canCount <= 0) {
@@ -961,8 +973,8 @@ export async function createGastoMovement(input: {
   note?: string;
   evidenceUrl?: string;
 }) {
-  if (!hasSupabaseEnv()) {
-    throw new Error("Supabase no está configurado.");
+  if (!hasSupabaseServerEnv()) {
+    throw new Error(getServerEnvError());
   }
 
   if (!Number.isFinite(input.amount) || input.amount <= 0) {
@@ -1027,8 +1039,8 @@ export async function setMovementRetirado(input: {
   actorProfileId: string;
   retirado: boolean;
 }) {
-  if (!hasSupabaseEnv()) {
-    throw new Error("Supabase no está configurado.");
+  if (!hasSupabaseServerEnv()) {
+    throw new Error(getServerEnvError());
   }
 
   const supabase = getSupabaseServerClient();
@@ -1072,8 +1084,8 @@ export async function createIncentiveMovement(input: {
   amount: number;
   note?: string;
 }) {
-  if (!hasSupabaseEnv()) {
-    throw new Error("Supabase no está configurado.");
+  if (!hasSupabaseServerEnv()) {
+    throw new Error(getServerEnvError());
   }
 
   if (!Number.isFinite(input.amount) || input.amount <= 0) {
@@ -1134,8 +1146,8 @@ export async function createAdjustmentMovement(input: {
   direction: "abonar" | "descontar";
   note: string;
 }) {
-  if (!hasSupabaseEnv()) {
-    throw new Error("Supabase no está configurado.");
+  if (!hasSupabaseServerEnv()) {
+    throw new Error(getServerEnvError());
   }
 
   if (!Number.isFinite(input.amount) || input.amount <= 0) {
@@ -1209,8 +1221,8 @@ export async function createHistoricalRegularization(input: {
   note: string;
   type: "latas_preexistentes" | "saldo_preexistente" | "ajuste_excepcional";
 }) {
-  if (!hasSupabaseEnv()) {
-    throw new Error("Supabase no está configurado.");
+  if (!hasSupabaseServerEnv()) {
+    throw new Error(getServerEnvError());
   }
 
   const supabase = getSupabaseServerClient();
@@ -1279,8 +1291,8 @@ export async function reverseMovement(input: {
   actorProfileId: string;
   note?: string;
 }) {
-  if (!hasSupabaseEnv()) {
-    throw new Error("Supabase no está configurado.");
+  if (!hasSupabaseServerEnv()) {
+    throw new Error(getServerEnvError());
   }
 
   const supabase = getSupabaseServerClient();
@@ -1351,8 +1363,8 @@ export async function mergeClientProfiles(input: {
   secondaryProfileId: string;
   actorProfileId: string;
 }) {
-  if (!hasSupabaseEnv()) {
-    throw new Error("Supabase no está configurado.");
+  if (!hasSupabaseServerEnv()) {
+    throw new Error(getServerEnvError());
   }
 
   if (input.primaryProfileId === input.secondaryProfileId) {
