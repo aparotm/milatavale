@@ -147,33 +147,45 @@ export async function stopImpersonationAction() {
 }
 
 export async function previewIngresoAction(formData: FormData) {
-  const evidenceFile = formData.get("evidence");
-  const evidenceUrl =
-    evidenceFile instanceof File && evidenceFile.size > 0
-      ? await uploadEvidenceFile(evidenceFile)
-      : String(formData.get("evidenceUrl") ?? "");
+  try {
+    const evidenceFile = formData.get("evidence");
+    const evidenceUrl =
+      evidenceFile instanceof File && evidenceFile.size > 0
+        ? await uploadEvidenceFile(evidenceFile)
+        : String(formData.get("evidenceUrl") ?? "");
 
-  buildPreviewRedirect("ingreso", {
-    clientProfileId: String(formData.get("clientProfileId") ?? ""),
-    canCount: String(formData.get("canCount") ?? ""),
-    note: String(formData.get("note") ?? ""),
-    evidenceUrl,
-  });
+    buildPreviewRedirect("ingreso", {
+      clientProfileId: String(formData.get("clientProfileId") ?? ""),
+      canCount: String(formData.get("canCount") ?? ""),
+      note: String(formData.get("note") ?? ""),
+      evidenceUrl,
+    });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "No se pudo preparar el registro.";
+    redirectWithPanelMessage("ingreso", "error", message);
+  }
 }
 
 export async function previewGastoAction(formData: FormData) {
-  const evidenceFile = formData.get("evidence");
-  const evidenceUrl =
-    evidenceFile instanceof File && evidenceFile.size > 0
-      ? await uploadEvidenceFile(evidenceFile)
-      : String(formData.get("evidenceUrl") ?? "");
+  try {
+    const evidenceFile = formData.get("evidence");
+    const evidenceUrl =
+      evidenceFile instanceof File && evidenceFile.size > 0
+        ? await uploadEvidenceFile(evidenceFile)
+        : String(formData.get("evidenceUrl") ?? "");
 
-  buildPreviewRedirect("gasto", {
-    clientProfileId: String(formData.get("clientProfileId") ?? ""),
-    amount: String(formData.get("amount") ?? ""),
-    note: String(formData.get("note") ?? ""),
-    evidenceUrl,
-  });
+    buildPreviewRedirect("gasto", {
+      clientProfileId: String(formData.get("clientProfileId") ?? ""),
+      amount: String(formData.get("amount") ?? ""),
+      note: String(formData.get("note") ?? ""),
+      evidenceUrl,
+    });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "No se pudo preparar el gasto.";
+    redirectWithPanelMessage("gasto", "error", message);
+  }
 }
 
 export async function createClientAction(formData: FormData) {

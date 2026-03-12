@@ -1,5 +1,5 @@
 import { demoMovements, demoUsers } from "@/lib/demo-data";
-import { hasSupabaseEnv } from "@/lib/env";
+import { hasSupabaseEnv, hasSupabaseServerEnv } from "@/lib/env";
 import { getSupabaseServerClient } from "@/lib/supabase";
 import {
   AppUser,
@@ -150,7 +150,7 @@ async function addAuditLog(input: {
 }
 
 export async function uploadEvidenceFile(file: File) {
-  if (!hasSupabaseEnv()) {
+  if (!hasSupabaseServerEnv()) {
     throw new Error("Supabase no está configurado.");
   }
 
