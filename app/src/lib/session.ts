@@ -8,7 +8,7 @@ const SESSION_COOKIE = "mlv_demo_user";
 const IMPERSONATOR_COOKIE = "mlv_admin_impersonator";
 const IMPERSONATED_USER_COOKIE = "mlv_impersonated_user";
 
-function decodeImpersonatedUser(value: string | undefined) {
+function decodeUserSnapshot(value: string | undefined) {
   if (!value) {
     return "";
   }
@@ -20,13 +20,13 @@ function decodeImpersonatedUser(value: string | undefined) {
   }
 }
 
-function parseImpersonatedUser(value: string | undefined): AppUser | null {
+function parseUserSnapshot(value: string | undefined): AppUser | null {
   if (!value) {
     return null;
   }
 
   try {
-    const parsed = JSON.parse(decodeImpersonatedUser(value)) as AppUser;
+    const parsed = JSON.parse(decodeUserSnapshot(value)) as AppUser;
     if (
       parsed &&
       typeof parsed.id === "string" &&
@@ -44,7 +44,7 @@ function parseImpersonatedUser(value: string | undefined): AppUser | null {
 
 export async function getSessionUser(): Promise<AppUser | null> {
   const cookieStore = await cookies();
-  const impersonatedUser = parseImpersonatedUser(
+  const impersonatedUser = parseUserSnapshot(
     cookieStore.get(IMPERSONATED_USER_COOKIE)?.value,
   );
 
@@ -63,13 +63,8 @@ export async function getSessionUser(): Promise<AppUser | null> {
 
 export async function getImpersonatorUser(): Promise<AppUser | null> {
   const cookieStore = await cookies();
-  const userId = cookieStore.get(IMPERSONATOR_COOKIE)?.value;
-
-  if (!userId) {
-    return null;
-  }
-
-  const user = await getUserById(userId);
+  const snapshot = parseUserSnapshot(cookieStore.get(IMPERSONATOR_COOKIE)?.value);
+  const user = snapshot ?? (await getUserById(cookieStore.get(IMPERSONATOR_COOKIE)?.value ?? ""));
   return user?.role === "admin" ? user : null;
 }
 

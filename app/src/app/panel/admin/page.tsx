@@ -26,6 +26,19 @@ import {
 } from "@/lib/format";
 import { requireSessionContext } from "@/lib/session";
 
+function encodeUserSnapshot(value: {
+  id: string;
+  email: string;
+  role: string;
+  fullName: string;
+  rut: string;
+  phone?: string;
+  localCode?: string;
+  localName?: string;
+}) {
+  return Buffer.from(JSON.stringify(value), "utf8").toString("base64url");
+}
+
 export default async function AdminPanelPage({
   searchParams,
 }: {
@@ -148,14 +161,22 @@ export default async function AdminPanelPage({
           <div className="panelGrid">
             <PanelCard title="Ver como usuario">
               <form action={impersonateUserAction} className="formStack">
+                <input
+                  name="adminSnapshot"
+                  type="hidden"
+                  value={encodeUserSnapshot(user)}
+                />
                 <div className="field">
                   <label htmlFor="admin-view-as">Usuario</label>
-                  <select id="admin-view-as" name="targetUserId" required>
+                  <select id="admin-view-as" name="targetUserSnapshot" required>
                     <option value="">Selecciona un usuario</option>
                     {users
                       .filter((appUser) => appUser.id !== user.id)
                       .map((appUser) => (
-                        <option key={appUser.id} value={appUser.id}>
+                        <option
+                          key={appUser.id}
+                          value={encodeUserSnapshot(appUser)}
+                        >
                           {appUser.fullName} · {appUser.role} · {appUser.rut}
                         </option>
                       ))}

@@ -20,7 +20,6 @@ import {
   setMovementRetirado,
   uploadEvidenceFile,
   updateLocalProfile,
-  getUserById,
 } from "@/lib/data";
 import {
   IMPERSONATED_USER_COOKIE,
@@ -31,6 +30,41 @@ import {
 function parsePositiveInteger(value: FormDataEntryValue | null) {
   const parsed = Number.parseInt(String(value ?? "").trim(), 10);
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function parseUserSnapshot(value: FormDataEntryValue | string | null | undefined) {
+  const source = String(value ?? "").trim();
+  if (!source) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(
+      Buffer.from(source, "base64url").toString("utf8"),
+    ) as {
+      id: string;
+      email: string;
+      role: string;
+      fullName: string;
+      rut: string;
+      phone?: string;
+      localCode?: string;
+      localName?: string;
+    };
+
+    if (
+      parsed &&
+      typeof parsed.id === "string" &&
+      typeof parsed.email === "string" &&
+      typeof parsed.role === "string" &&
+      typeof parsed.fullName === "string" &&
+      typeof parsed.rut === "string"
+    ) {
+      return parsed;
+    }
+  } catch {}
+
+  return null;
 }
 
 function redirectWithPanelMessage(
@@ -95,36 +129,43 @@ export async function logoutAction() {
 async function getActingAdmin() {
   const cookieStore = await cookies();
   const impersonatorId = cookieStore.get(IMPERSONATOR_COOKIE)?.value;
-  const sessionId = cookieStore.get(SESSION_COOKIE)?.value;
-  const actingUser = impersonatorId
-    ? await getUserById(impersonatorId)
-    : sessionId
-      ? await getUserById(sessionId)
-      : null;
+  const impersonator = parseUserSnapshot(impersonatorId);
+  const sessionUser = parseUserSnapshot(cookieStore.get(IMPERSONATED_USER_COOKIE)?.value);
 
-  return actingUser?.role === "admin" ? actingUser : null;
+  if (impersonator?.role === "admin") {
+    return impersonator;
+  }
+
+  if (sessionUser?.role === "admin") {
+    return sessionUser;
+  }
+
+  return null;
 }
 
 export async function impersonateUserAction(formData: FormData) {
-  const admin = await getActingAdmin();
+  const admin = parseUserSnapshot(formData.get("adminSnapshot")) ?? (await getActingAdmin());
 
   if (!admin) {
     redirect("/login");
   }
 
-  const targetUserId = String(formData.get("targetUserId") ?? "");
-  const targetUser = await getUserById(targetUserId);
+  const targetUser = parseUserSnapshot(formData.get("targetUserSnapshot"));
 
   if (!targetUser) {
     redirect("/panel/admin?error=Usuario+no+encontrado");
   }
 
   const cookieStore = await cookies();
-  cookieStore.set(IMPERSONATOR_COOKIE, admin.id, {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-  });
+  cookieStore.set(
+    IMPERSONATOR_COOKIE,
+    Buffer.from(JSON.stringify(admin), "utf8").toString("base64url"),
+    {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+    },
+  );
   cookieStore.set(SESSION_COOKIE, targetUser.id, {
     httpOnly: true,
     sameSite: "lax",
@@ -145,10 +186,10 @@ export async function impersonateUserAction(formData: FormData) {
 
 export async function stopImpersonationAction() {
   const cookieStore = await cookies();
-  const impersonatorId = cookieStore.get(IMPERSONATOR_COOKIE)?.value;
+  const impersonator = parseUserSnapshot(cookieStore.get(IMPERSONATOR_COOKIE)?.value);
 
-  if (impersonatorId) {
-    cookieStore.set(SESSION_COOKIE, impersonatorId, {
+  if (impersonator?.id) {
+    cookieStore.set(SESSION_COOKIE, impersonator.id, {
       httpOnly: true,
       sameSite: "lax",
       path: "/",
