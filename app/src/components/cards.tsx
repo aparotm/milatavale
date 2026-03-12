@@ -39,3 +39,24 @@ export function PanelCard({
     </section>
   );
 }
+
+export function DetailTable({
+  rows,
+}: {
+  rows: Array<{ label: string; value: ReactNode }>;
+}) {
+  return (
+    <div className="tableWrap">
+      <table>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.label}>
+              <th>{row.label}</th>
+              <td>{row.value}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}

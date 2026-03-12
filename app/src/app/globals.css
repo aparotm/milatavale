@@ -223,6 +223,27 @@ input {
   margin-top: 20px;
 }
 
+.actionRow {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.actionCard {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 16px;
+  background: linear-gradient(
+    180deg,
+    rgba(220, 239, 228, 0.7),
+    rgba(255, 253, 248, 0.9)
+  );
+}
+
+.actionCard p {
+  margin-bottom: 0;
+}
+
 .panelCard {
   border-radius: 24px;
   padding: 20px;
@@ -293,7 +314,8 @@ th {
   .heroGrid,
   .loginGrid,
   .shell,
-  .kpiGrid {
+  .kpiGrid,
+  .actionRow {
     grid-template-columns: 1fr;
   }
 

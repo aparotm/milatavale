@@ -1,6 +1,7 @@
 import { AppShell } from "@/components/shell";
-import { KpiCard, PanelCard } from "@/components/cards";
+import { DetailTable, KpiCard, PanelCard } from "@/components/cards";
 import { getMovementsForLocal } from "@/lib/data";
+import { formatCompactDate, formatMoney } from "@/lib/format";
 import { requireSessionUser } from "@/lib/session";
 
 export default async function GestorPanelPage() {
@@ -13,7 +14,7 @@ export default async function GestorPanelPage() {
   return (
     <AppShell
       title="Panel Gestor"
-      subtitle="Vista logística para retiros pendientes por local."
+      subtitle="Vista logística de retiros pendientes por local."
       user={user}
     >
       <div className="kpiGrid">
@@ -24,13 +25,29 @@ export default async function GestorPanelPage() {
         />
         <KpiCard
           label="Monto asociado"
-          value={`$${pending.reduce((sum, movement) => sum + Math.max(movement.amount, 0), 0)}`}
+          value={formatMoney(
+            pending.reduce((sum, movement) => sum + Math.max(movement.amount, 0), 0),
+          )}
         />
         <KpiCard label="Local" value={user.localName ?? "—"} />
       </div>
 
       <div className="panelGrid">
-        <PanelCard title="Retiros disponibles">
+        <PanelCard title="Información del gestor">
+          <DetailTable
+            rows={[
+              { label: "Nombre", value: user.fullName },
+              { label: "Email", value: user.email },
+              { label: "RUT", value: user.rut },
+              { label: "Local", value: user.localName ?? "—" },
+            ]}
+          />
+        </PanelCard>
+
+        <PanelCard
+          title="Retiros disponibles"
+          description="Movimientos pendientes de retiro asociados al local."
+        >
           <div className="tableWrap">
             <table>
               <thead>
@@ -45,11 +62,11 @@ export default async function GestorPanelPage() {
               <tbody>
                 {pending.map((movement) => (
                   <tr key={movement.id}>
-                    <td>{movement.createdAt}</td>
+                    <td>{formatCompactDate(movement.createdAt)}</td>
                     <td>{movement.clientName}</td>
                     <td>{movement.clientRut}</td>
                     <td>{movement.canCount}</td>
-                    <td>{movement.amount}</td>
+                    <td>{formatMoney(movement.amount)}</td>
                   </tr>
                 ))}
               </tbody>
