@@ -71,3 +71,9 @@ export type DiagnosticsSummary = {
   usersWithoutLocal: number;
   pendingMovements: number;
 };
+
+export type DuplicateRutGroup = {
+  rut: string;
+  users: AppUser[];
+  movementCountByUser: Record<string, number>;
+};

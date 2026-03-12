@@ -6,10 +6,13 @@ import { redirect } from "next/navigation";
 
 import {
   createClientForLocal,
+  createAdjustmentMovement,
   createGastoMovement,
   createIngresoMovement,
   createIncentiveMovement,
+  createHistoricalRegularization,
   getUserByCredentials,
+  mergeClientProfiles,
   reverseMovement,
   setMovementRetirado,
   updateLocalProfile,
@@ -282,5 +285,87 @@ export async function updateLocalProfileAction(formData: FormData) {
     const message =
       error instanceof Error ? error.message : "No se pudo actualizar el perfil.";
     redirect(`/panel/almacen?tab=perfil&error=${encodeURIComponent(message)}`);
+  }
+}
+
+export async function createAdjustmentAction(formData: FormData) {
+  const clientProfileId = String(formData.get("clientProfileId") ?? "");
+  const localCode = String(formData.get("localCode") ?? "");
+  const createdByProfileId = String(formData.get("createdByProfileId") ?? "");
+  const amount = parsePositiveInteger(formData.get("amount"));
+  const direction = String(formData.get("direction") ?? "") as "abonar" | "descontar";
+  const note = String(formData.get("note") ?? "");
+
+  try {
+    await createAdjustmentMovement({
+      clientProfileId,
+      localCode,
+      createdByProfileId,
+      amount,
+      direction,
+      note,
+    });
+
+    revalidatePath("/panel/admin");
+    redirect("/panel/admin?tab=ajustes&success=Ajuste+registrado.");
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "No se pudo registrar el ajuste.";
+    redirect(`/panel/admin?tab=ajustes&error=${encodeURIComponent(message)}`);
+  }
+}
+
+export async function createRegularizationAction(formData: FormData) {
+  const clientProfileId = String(formData.get("clientProfileId") ?? "");
+  const localCode = String(formData.get("localCode") ?? "");
+  const createdByProfileId = String(formData.get("createdByProfileId") ?? "");
+  const amount = parsePositiveInteger(formData.get("amount"));
+  const canCount = parsePositiveInteger(formData.get("canCount"));
+  const valuePerCan = parsePositiveInteger(formData.get("valuePerCan"));
+  const note = String(formData.get("note") ?? "");
+  const type = String(formData.get("type") ?? "") as
+    | "latas_preexistentes"
+    | "saldo_preexistente"
+    | "ajuste_excepcional";
+
+  try {
+    await createHistoricalRegularization({
+      clientProfileId,
+      localCode,
+      createdByProfileId,
+      amount,
+      canCount,
+      valuePerCan,
+      note,
+      type,
+    });
+
+    revalidatePath("/panel/admin");
+    redirect("/panel/admin?tab=regularizacion&success=Regularización+registrada.");
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "No se pudo registrar la regularización.";
+    redirect(`/panel/admin?tab=regularizacion&error=${encodeURIComponent(message)}`);
+  }
+}
+
+export async function mergeClientsAction(formData: FormData) {
+  const primaryProfileId = String(formData.get("primaryProfileId") ?? "");
+  const secondaryProfileId = String(formData.get("secondaryProfileId") ?? "");
+  const actorProfileId = String(formData.get("actorProfileId") ?? "");
+
+  try {
+    await mergeClientProfiles({
+      primaryProfileId,
+      secondaryProfileId,
+      actorProfileId,
+    });
+
+    revalidatePath("/panel/admin");
+    redirect("/panel/admin?tab=duplicados&success=Fusión+realizada.");
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "No se pudo fusionar el cliente.";
+    redirect(`/panel/admin?tab=duplicados&error=${encodeURIComponent(message)}`);
   }
 }

@@ -5,6 +5,7 @@ import {
   AppUser,
   AuditEntry,
   DiagnosticsSummary,
+  DuplicateRutGroup,
   LedgerMovement,
   LocalHours,
   LocalProfile,
@@ -355,6 +356,34 @@ export async function getDiagnosticsSummary(): Promise<DiagnosticsSummary> {
       (movement) => movement.status === "pendiente_retiro",
     ).length,
   };
+}
+
+export async function getDuplicateRutGroups(): Promise<DuplicateRutGroup[]> {
+  const users = await getUsers();
+  const movements = await getMovements();
+  const byRut = new Map<string, AppUser[]>();
+
+  users
+    .filter((user) => user.role === "cliente")
+    .forEach((user) => {
+      const key = normalizeRut(user.rut);
+      const current = byRut.get(key) ?? [];
+      current.push(user);
+      byRut.set(key, current);
+    });
+
+  return Array.from(byRut.entries())
+    .filter(([, groupedUsers]) => groupedUsers.length > 1)
+    .map(([rut, groupedUsers]) => ({
+      rut,
+      users: groupedUsers,
+      movementCountByUser: Object.fromEntries(
+        groupedUsers.map((user) => [
+          user.id,
+          movements.filter((movement) => movement.clientId === user.id).length,
+        ]),
+      ),
+    }));
 }
 
 export async function getLocalProfile(localCode: string): Promise<LocalProfile | null> {
@@ -854,6 +883,154 @@ export async function createIncentiveMovement(input: {
   });
 }
 
+export async function createAdjustmentMovement(input: {
+  clientProfileId: string;
+  localCode: string;
+  createdByProfileId: string;
+  amount: number;
+  direction: "abonar" | "descontar";
+  note: string;
+}) {
+  if (!hasSupabaseEnv()) {
+    throw new Error("Supabase no está configurado.");
+  }
+
+  if (!Number.isFinite(input.amount) || input.amount <= 0) {
+    throw new Error("El monto del ajuste debe ser mayor a cero.");
+  }
+
+  const supabase = getSupabaseServerClient();
+  if (!supabase) {
+    throw new Error("No fue posible conectar con Supabase.");
+  }
+
+  const local = await getLocalByCode(input.localCode);
+  if (!local) {
+    throw new Error("No se encontró el local.");
+  }
+
+  const signedAmount = input.direction === "descontar" ? -input.amount : input.amount;
+  if (input.direction === "descontar") {
+    const balance = await getClientBalance(input.clientProfileId);
+    if (balance < input.amount) {
+      throw new Error("El cliente no tiene saldo suficiente para el ajuste.");
+    }
+  }
+
+  const { data, error } = await supabase
+    .from("movements")
+    .insert({
+      type: signedAmount >= 0 ? "ingreso" : "gasto",
+      client_profile_id: input.clientProfileId,
+      local_id: local.id,
+      created_by_profile_id: input.createdByProfileId,
+      can_count: 0,
+      value_per_can: 0,
+      amount: signedAmount,
+      balance_origin: "ajuste",
+      movement_classification: "correccion",
+      logistic_status: "retirado",
+      is_system_adjustment: true,
+      detail: {
+        note: input.note.trim() || "Ajuste manual",
+        source: "admin_ajuste",
+        adjustment_direction: input.direction,
+      },
+    })
+    .select("id")
+    .single();
+
+  if (error || !data) {
+    throw new Error("No se pudo registrar el ajuste.");
+  }
+
+  await addAuditLog({
+    actorProfileId: input.createdByProfileId,
+    action: "movimiento_ajuste_create",
+    objectType: "movement",
+    objectId: data.id,
+    afterData: {
+      amount: signedAmount,
+      direction: input.direction,
+    },
+  });
+}
+
+export async function createHistoricalRegularization(input: {
+  clientProfileId: string;
+  localCode: string;
+  createdByProfileId: string;
+  amount: number;
+  canCount?: number;
+  valuePerCan?: number;
+  note: string;
+  type: "latas_preexistentes" | "saldo_preexistente" | "ajuste_excepcional";
+}) {
+  if (!hasSupabaseEnv()) {
+    throw new Error("Supabase no está configurado.");
+  }
+
+  const supabase = getSupabaseServerClient();
+  if (!supabase) {
+    throw new Error("No fue posible conectar con Supabase.");
+  }
+
+  const local = await getLocalByCode(input.localCode);
+  if (!local) {
+    throw new Error("No se encontró el local.");
+  }
+
+  const amount =
+    input.type === "latas_preexistentes"
+      ? (input.canCount ?? 0) * (input.valuePerCan ?? DEFAULT_VALUE_PER_CAN)
+      : input.amount;
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    throw new Error("La regularización debe generar un monto positivo.");
+  }
+
+  const { data, error } = await supabase
+    .from("movements")
+    .insert({
+      type: "ingreso",
+      client_profile_id: input.clientProfileId,
+      local_id: local.id,
+      created_by_profile_id: input.createdByProfileId,
+      can_count: input.type === "latas_preexistentes" ? input.canCount ?? 0 : 0,
+      value_per_can:
+        input.type === "latas_preexistentes"
+          ? input.valuePerCan ?? DEFAULT_VALUE_PER_CAN
+          : 0,
+      amount,
+      balance_origin: input.type === "saldo_preexistente" ? "incentivo" : "reciclaje",
+      movement_classification: "regularizacion_historica",
+      logistic_status: "retirado",
+      is_system_adjustment: true,
+      detail: {
+        note: input.note.trim() || "Regularización histórica",
+        source: "admin_regularizacion",
+        regularization_type: input.type,
+      },
+    })
+    .select("id")
+    .single();
+
+  if (error || !data) {
+    throw new Error("No se pudo registrar la regularización.");
+  }
+
+  await addAuditLog({
+    actorProfileId: input.createdByProfileId,
+    action: "movimiento_regularizacion_create",
+    objectType: "movement",
+    objectId: data.id,
+    afterData: {
+      amount,
+      type: input.type,
+    },
+  });
+}
+
 export async function reverseMovement(input: {
   movementId: string;
   actorProfileId: string;
@@ -922,6 +1099,90 @@ export async function reverseMovement(input: {
     objectId: inserted.id,
     afterData: {
       ref: input.movementId,
+    },
+  });
+}
+
+export async function mergeClientProfiles(input: {
+  primaryProfileId: string;
+  secondaryProfileId: string;
+  actorProfileId: string;
+}) {
+  if (!hasSupabaseEnv()) {
+    throw new Error("Supabase no está configurado.");
+  }
+
+  if (input.primaryProfileId === input.secondaryProfileId) {
+    throw new Error("Los perfiles a fusionar deben ser distintos.");
+  }
+
+  const supabase = getSupabaseServerClient();
+  if (!supabase) {
+    throw new Error("No fue posible conectar con Supabase.");
+  }
+
+  const { error: moveMovementError } = await supabase
+    .from("movements")
+    .update({
+      client_profile_id: input.primaryProfileId,
+    })
+    .eq("client_profile_id", input.secondaryProfileId);
+
+  if (moveMovementError) {
+    throw new Error("No se pudieron mover los movimientos al perfil principal.");
+  }
+
+  const { data: secondaryRelations } = await supabase
+    .from("cliente_locales")
+    .select("local_id")
+    .eq("cliente_profile_id", input.secondaryProfileId);
+
+  for (const relation of secondaryRelations ?? []) {
+    await supabase.from("cliente_locales").upsert(
+      {
+        cliente_profile_id: input.primaryProfileId,
+        local_id: relation.local_id,
+        created_by_profile_id: input.actorProfileId,
+      },
+      {
+        onConflict: "cliente_profile_id,local_id",
+      },
+    );
+  }
+
+  await supabase
+    .from("cliente_locales")
+    .delete()
+    .eq("cliente_profile_id", input.secondaryProfileId);
+
+  await supabase
+    .from("alerts")
+    .update({
+      profile_id: input.primaryProfileId,
+    })
+    .eq("profile_id", input.secondaryProfileId);
+
+  const { error: secondaryUpdateError } = await supabase
+    .from("profiles")
+    .update({
+      active: false,
+      metadata: {
+        merged_into: input.primaryProfileId,
+      },
+    })
+    .eq("id", input.secondaryProfileId);
+
+  if (secondaryUpdateError) {
+    throw new Error("No se pudo marcar el perfil secundario como fusionado.");
+  }
+
+  await addAuditLog({
+    actorProfileId: input.actorProfileId,
+    action: "cliente_merge",
+    objectType: "profile",
+    objectId: input.primaryProfileId,
+    afterData: {
+      secondary: input.secondaryProfileId,
     },
   });
 }

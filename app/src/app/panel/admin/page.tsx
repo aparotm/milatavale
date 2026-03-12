@@ -1,7 +1,10 @@
 import Link from "next/link";
 
 import {
+  createAdjustmentAction,
   createIncentiveAction,
+  createRegularizationAction,
+  mergeClientsAction,
   reverseMovementAction,
 } from "@/app/actions";
 import { AppShell } from "@/components/shell";
@@ -9,6 +12,7 @@ import { KpiCard, PanelCard } from "@/components/cards";
 import {
   getAuditEntries,
   getDiagnosticsSummary,
+  getDuplicateRutGroups,
   getMovements,
   getUsers,
 } from "@/lib/data";
@@ -34,6 +38,7 @@ export default async function AdminPanelPage({
   const movements = await getMovements();
   const auditEntries = await getAuditEntries(12);
   const diagnostics = await getDiagnosticsSummary();
+  const duplicateGroups = await getDuplicateRutGroups();
   const clients = users.filter((item) => item.role === "cliente");
   const totalGenerated = movements
     .filter((movement) => movement.amount > 0)
@@ -65,9 +70,21 @@ export default async function AdminPanelPage({
           <Link className="primaryButton" href="/panel/admin?tab=incentivos">
             Incentivos
           </Link>
+          <Link className="primaryButton" href="/panel/admin?tab=ajustes">
+            Ajustes
+          </Link>
+          <Link className="primaryButton" href="/panel/admin?tab=regularizacion">
+            Regularización
+          </Link>
+          <Link className="primaryButton" href="/panel/admin?tab=duplicados">
+            RUT duplicados
+          </Link>
           <Link className="primaryButton" href="/panel/admin?tab=diagnostico">
             Diagnóstico
           </Link>
+          <a className="primaryButton" href="/panel/admin/export">
+            Export CSV
+          </a>
         </div>
       }
     >
@@ -310,6 +327,184 @@ export default async function AdminPanelPage({
               <li>Movimientos aún pendientes de retiro</li>
               <li>Base lista para sumar reglas más estrictas</li>
             </ul>
+          </PanelCard>
+        </div>
+      ) : null}
+
+      {tab === "ajustes" ? (
+        <div className="panelGrid">
+          <PanelCard
+            title="Ajuste contable"
+            description="Abona o descuenta saldo de un cliente, siguiendo la lógica del plugin."
+          >
+            <form action={createAdjustmentAction} className="formStack">
+              <input name="createdByProfileId" type="hidden" value={user.id} />
+              <div className="field">
+                <label htmlFor="adjustment-client">Cliente</label>
+                <select id="adjustment-client" name="clientProfileId" required>
+                  <option value="">Selecciona un cliente</option>
+                  {clients.map((client) => (
+                    <option key={client.id} value={client.id}>
+                      {client.fullName} · {client.rut}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="field">
+                <label htmlFor="adjustment-local">Código local</label>
+                <input
+                  defaultValue={clients[0]?.localCode ?? ""}
+                  id="adjustment-local"
+                  name="localCode"
+                  required
+                  type="text"
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="adjustment-direction">Tipo</label>
+                <select id="adjustment-direction" name="direction" required>
+                  <option value="abonar">Abonar</option>
+                  <option value="descontar">Descontar</option>
+                </select>
+              </div>
+              <div className="field">
+                <label htmlFor="adjustment-amount">Monto</label>
+                <input id="adjustment-amount" min="1" name="amount" required type="number" />
+              </div>
+              <div className="field">
+                <label htmlFor="adjustment-note">Motivo</label>
+                <textarea id="adjustment-note" name="note" rows={3} required />
+              </div>
+              <button className="primaryButton" type="submit">
+                Registrar ajuste
+              </button>
+            </form>
+          </PanelCard>
+        </div>
+      ) : null}
+
+      {tab === "regularizacion" ? (
+        <div className="panelGrid">
+          <PanelCard
+            title="Regularización histórica"
+            description="Carga saldo o latas preexistentes sin afectar el retiro físico."
+          >
+            <form action={createRegularizationAction} className="formStack">
+              <input name="createdByProfileId" type="hidden" value={user.id} />
+              <div className="field">
+                <label htmlFor="regularization-client">Cliente</label>
+                <select id="regularization-client" name="clientProfileId" required>
+                  <option value="">Selecciona un cliente</option>
+                  {clients.map((client) => (
+                    <option key={client.id} value={client.id}>
+                      {client.fullName} · {client.rut}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="field">
+                <label htmlFor="regularization-local">Código local</label>
+                <input
+                  defaultValue={clients[0]?.localCode ?? ""}
+                  id="regularization-local"
+                  name="localCode"
+                  required
+                  type="text"
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="regularization-type">Tipo</label>
+                <select id="regularization-type" name="type" required>
+                  <option value="latas_preexistentes">Latas preexistentes</option>
+                  <option value="saldo_preexistente">Saldo preexistente</option>
+                  <option value="ajuste_excepcional">Ajuste excepcional</option>
+                </select>
+              </div>
+              <div className="field">
+                <label htmlFor="regularization-cans">Cantidad de latas</label>
+                <input id="regularization-cans" min="0" name="canCount" type="number" />
+              </div>
+              <div className="field">
+                <label htmlFor="regularization-vpc">Valor por lata</label>
+                <input
+                  defaultValue="10"
+                  id="regularization-vpc"
+                  min="0"
+                  name="valuePerCan"
+                  type="number"
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="regularization-amount">Monto total</label>
+                <input id="regularization-amount" min="0" name="amount" type="number" />
+              </div>
+              <div className="field">
+                <label htmlFor="regularization-note">Motivo</label>
+                <textarea id="regularization-note" name="note" rows={3} required />
+              </div>
+              <button className="primaryButton" type="submit">
+                Registrar regularización
+              </button>
+            </form>
+          </PanelCard>
+        </div>
+      ) : null}
+
+      {tab === "duplicados" ? (
+        <div className="panelGrid">
+          <PanelCard
+            title="RUT duplicados"
+            description="Fusiona el perfil secundario sobre el principal, igual que el módulo legacy."
+          >
+            {duplicateGroups.length === 0 ? (
+              <div className="infoBox">No se encontraron duplicados.</div>
+            ) : (
+              duplicateGroups.map((group) => (
+                <div className="panelCard" key={group.rut}>
+                  <h3>{group.rut}</h3>
+                  <div className="tableWrap">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Nombre</th>
+                          <th>Email</th>
+                          <th>Movimientos</th>
+                          <th>Local</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {group.users.map((groupUser) => (
+                          <tr key={groupUser.id}>
+                            <td>{groupUser.fullName}</td>
+                            <td>{groupUser.email}</td>
+                            <td>{group.movementCountByUser[groupUser.id] ?? 0}</td>
+                            <td>{groupUser.localName ?? "—"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {group.users.length >= 2 ? (
+                    <form action={mergeClientsAction} className="formStack">
+                      <input name="actorProfileId" type="hidden" value={user.id} />
+                      <input
+                        name="primaryProfileId"
+                        type="hidden"
+                        value={group.users[0].id}
+                      />
+                      <input
+                        name="secondaryProfileId"
+                        type="hidden"
+                        value={group.users[1].id}
+                      />
+                      <button className="ghostButton" type="submit">
+                        Fusionar segundo usuario en el primero
+                      </button>
+                    </form>
+                  ) : null}
+                </div>
+              ))
+            )}
           </PanelCard>
         </div>
       ) : null}
