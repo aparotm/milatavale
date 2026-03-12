@@ -1,5 +1,6 @@
 import { AppShell } from "@/components/shell";
 import { KpiCard, PanelCard } from "@/components/cards";
+import { TableSearch } from "@/components/table-search";
 import { getClientBalance, getMovementsForClient } from "@/lib/data";
 import {
   formatCompactDate,
@@ -39,7 +40,7 @@ export default async function ClientePanelPage() {
   return (
     <AppShell
       title={`Hola, ${user.fullName.split(" ")[0] ?? user.fullName}`}
-      subtitle="Saldo disponible, trazabilidad completa y lectura del ledger personal."
+      subtitle=""
       user={user}
     >
       <div className="kpiGrid">
@@ -57,7 +58,7 @@ export default async function ClientePanelPage() {
       </div>
 
       <PanelCard title="Buscar">
-        <input className="searchInput" placeholder="Buscar..." readOnly value="" />
+        <TableSearch tableId="cliente-movimientos" />
       </PanelCard>
 
       <PanelCard
@@ -65,7 +66,7 @@ export default async function ClientePanelPage() {
         description=""
       >
         <div className="tableWrap">
-          <table>
+          <table id="cliente-movimientos">
             <thead>
               <tr>
                 <th>Fecha</th>
@@ -81,7 +82,17 @@ export default async function ClientePanelPage() {
             </thead>
             <tbody>
               {rows.map((movement) => (
-                <tr key={movement.id}>
+                <tr
+                  data-search={[
+                    movement.createdAt,
+                    movement.type,
+                    movement.localName ?? user.localName ?? movement.localCode,
+                    movement.note ?? "",
+                  ]
+                    .join(" ")
+                    .toLowerCase()}
+                  key={movement.id}
+                >
                   <td>{formatCompactDate(movement.createdAt)}</td>
                   <td>{movementLabel(movement.type)}</td>
                   <td>{movement.localName ?? user.localName ?? movement.localCode}</td>

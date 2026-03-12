@@ -11,6 +11,7 @@ import {
 import { AppShell } from "@/components/shell";
 import { KpiCard, PanelCard } from "@/components/cards";
 import { EvidencePicker } from "@/components/evidence-picker";
+import { TableSearch } from "@/components/table-search";
 import { getLocalProfile, getMovementsForLocal, getUsers } from "@/lib/data";
 import {
   formatCompactDate,
@@ -110,7 +111,7 @@ export default async function AlmacenPanelPage({
   return (
     <AppShell
       title={`Hola, ${user.fullName.split(" ")[0] ?? user.fullName}`}
-      subtitle="Panel almacenero con vista por cliente, registro en 2 pasos y trazabilidad del local."
+      subtitle=""
       user={user}
       actions={
         <div className="toolbar">
@@ -456,12 +457,7 @@ export default async function AlmacenPanelPage({
           </div>
 
           <PanelCard title="Buscar en movimientos">
-            <input
-              className="searchInput"
-              placeholder="Buscar..."
-              readOnly
-              value=""
-            />
+            <TableSearch tableId="almacen-movimientos" />
           </PanelCard>
 
           <PanelCard
@@ -512,7 +508,7 @@ export default async function AlmacenPanelPage({
               </table>
             </div>
             <div className="tableWrap">
-              <table>
+              <table id="almacen-movimientos">
                 <thead>
                   <tr>
                     <th>Fecha</th>
@@ -528,7 +524,18 @@ export default async function AlmacenPanelPage({
                 </thead>
                 <tbody>
                   {visibleMovements.map((movement) => (
-                    <tr key={movement.id}>
+                    <tr
+                      data-search={[
+                        movement.createdAt,
+                        movement.type,
+                        movement.clientName,
+                        movement.clientRut,
+                        movement.note ?? "",
+                      ]
+                        .join(" ")
+                        .toLowerCase()}
+                      key={movement.id}
+                    >
                       <td>{formatCompactDate(movement.createdAt)}</td>
                       <td>{movementLabel(movement.type)}</td>
                       <td>{user.localName ?? movement.localName ?? movement.localCode}</td>
