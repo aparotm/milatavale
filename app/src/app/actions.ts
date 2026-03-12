@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -161,6 +162,10 @@ export async function previewIngresoAction(formData: FormData) {
       evidenceUrl,
     });
   } catch (error) {
+    if (isRedirectError(error)) {
+      throw error;
+    }
+
     const message =
       error instanceof Error ? error.message : "No se pudo preparar el registro.";
     redirectWithPanelMessage("ingreso", "error", message);
@@ -182,6 +187,10 @@ export async function previewGastoAction(formData: FormData) {
       evidenceUrl,
     });
   } catch (error) {
+    if (isRedirectError(error)) {
+      throw error;
+    }
+
     const message =
       error instanceof Error ? error.message : "No se pudo preparar el gasto.";
     redirectWithPanelMessage("gasto", "error", message);
