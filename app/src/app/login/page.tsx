@@ -10,50 +10,54 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
   return (
     <main className="loginPage">
-      <section className="loginCard">
-        <div className="loginGrid">
-          <div>
-            <p className="eyebrow">Acceso demo</p>
-            <h1 className="loginTitle">Entrar al prototipo</h1>
-            <p className="muted">
-              Esta etapa usa usuarios de prueba y login simple. El registro
-              público y auth definitiva se implementarán después de validar la
-              réplica funcional.
-            </p>
-          </div>
-
-          <div>
-            {hasError ? (
-              <div className="errorBox">Credenciales inválidas.</div>
-            ) : null}
-
-            <form className="formStack" action={loginAction}>
-              <label className="field">
-                <span>Email</span>
-                <input
-                  defaultValue="admin@milatavale.app"
-                  name="email"
-                  type="email"
-                  required
-                />
-              </label>
-
-              <label className="field">
-                <span>Password</span>
-                <input
-                  defaultValue="demo123"
-                  name="password"
-                  type="password"
-                  required
-                />
-              </label>
-
-              <button className="primaryButton" type="submit">
-                Ingresar
-              </button>
-            </form>
+      <section className="loginCard" style={{ maxWidth: 560 }}>
+        <div
+          style={{
+            display: "grid",
+            justifyItems: "center",
+            gap: 20,
+            marginBottom: 20,
+          }}
+        >
+          <div className="brandMark">
+            <span>MI LATA VALE</span>
           </div>
         </div>
+
+        {hasError ? <div className="errorBox">Credenciales inválidas.</div> : null}
+
+        <form className="formStack" action={loginAction}>
+          <label className="field">
+            <span>RUT</span>
+            <input
+              defaultValue="11.111.111-1"
+              name="identifier"
+              placeholder="12.345.678-9"
+              required
+              type="text"
+            />
+          </label>
+
+          <label className="field">
+            <span>Contraseña</span>
+            <input
+              defaultValue="demo123"
+              name="password"
+              placeholder="Contraseña"
+              required
+              type="password"
+            />
+          </label>
+
+          <div className="infoBox">
+            En esta etapa puedes entrar con RUT o email del usuario demo. La
+            contraseña temporal sigue siendo `demo123`.
+          </div>
+
+          <button className="primaryButton" type="submit">
+            Ingresar
+          </button>
+        </form>
       </section>
     </main>
   );

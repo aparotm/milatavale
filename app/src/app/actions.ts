@@ -9,6 +9,7 @@ import {
   createGastoMovement,
   createIngresoMovement,
   getUserByCredentials,
+  setMovementRetirado,
 } from "@/lib/data";
 import { SESSION_COOKIE } from "@/lib/session";
 
@@ -18,20 +19,37 @@ function parsePositiveInteger(value: FormDataEntryValue | null) {
 }
 
 function redirectWithPanelMessage(
-  search: string,
+  tab: string,
   type: "success" | "error",
   message: string,
 ) {
   const params = new URLSearchParams();
   params.set(type, message);
-  if (search) {
-    params.set("tab", search);
+  if (tab) {
+    params.set("tab", tab);
   }
   redirect(`/panel/almacen?${params.toString()}`);
 }
 
+function buildPreviewRedirect(
+  tab: "ingreso" | "gasto",
+  values: Record<string, string>,
+) {
+  const params = new URLSearchParams();
+  params.set("tab", tab);
+  params.set("preview", "1");
+
+  Object.entries(values).forEach(([key, value]) => {
+    if (value) {
+      params.set(key, value);
+    }
+  });
+
+  redirect(`/panel/almacen?${params.toString()}`);
+}
+
 export async function loginAction(formData: FormData) {
-  const email = String(formData.get("email") ?? "").trim();
+  const email = String(formData.get("identifier") ?? "").trim();
   const password = String(formData.get("password") ?? "").trim();
 
   const user = await getUserByCredentials(email, password);
@@ -54,6 +72,24 @@ export async function logoutAction() {
   const cookieStore = await cookies();
   cookieStore.delete(SESSION_COOKIE);
   redirect("/login");
+}
+
+export async function previewIngresoAction(formData: FormData) {
+  buildPreviewRedirect("ingreso", {
+    clientProfileId: String(formData.get("clientProfileId") ?? ""),
+    canCount: String(formData.get("canCount") ?? ""),
+    note: String(formData.get("note") ?? ""),
+    evidenceUrl: String(formData.get("evidenceUrl") ?? ""),
+  });
+}
+
+export async function previewGastoAction(formData: FormData) {
+  buildPreviewRedirect("gasto", {
+    clientProfileId: String(formData.get("clientProfileId") ?? ""),
+    amount: String(formData.get("amount") ?? ""),
+    note: String(formData.get("note") ?? ""),
+    evidenceUrl: String(formData.get("evidenceUrl") ?? ""),
+  });
 }
 
 export async function createClientAction(formData: FormData) {
@@ -90,6 +126,7 @@ export async function createIngresoAction(formData: FormData) {
   const createdByProfileId = String(formData.get("createdByProfileId") ?? "");
   const canCount = parsePositiveInteger(formData.get("canCount"));
   const note = String(formData.get("note") ?? "");
+  const evidenceUrl = String(formData.get("evidenceUrl") ?? "");
 
   try {
     await createIngresoMovement({
@@ -98,11 +135,13 @@ export async function createIngresoAction(formData: FormData) {
       createdByProfileId,
       canCount,
       note,
+      evidenceUrl,
     });
 
     revalidatePath("/panel/almacen");
     revalidatePath("/panel/admin");
     revalidatePath("/panel/cliente");
+    revalidatePath("/panel/gestor");
     redirectWithPanelMessage("ingreso", "success", "Ingreso registrado.");
   } catch (error) {
     const message =
@@ -117,6 +156,7 @@ export async function createGastoAction(formData: FormData) {
   const createdByProfileId = String(formData.get("createdByProfileId") ?? "");
   const amount = parsePositiveInteger(formData.get("amount"));
   const note = String(formData.get("note") ?? "");
+  const evidenceUrl = String(formData.get("evidenceUrl") ?? "");
 
   try {
     await createGastoMovement({
@@ -125,6 +165,7 @@ export async function createGastoAction(formData: FormData) {
       createdByProfileId,
       amount,
       note,
+      evidenceUrl,
     });
 
     revalidatePath("/panel/almacen");
@@ -136,4 +177,23 @@ export async function createGastoAction(formData: FormData) {
       error instanceof Error ? error.message : "No se pudo registrar el gasto.";
     redirectWithPanelMessage("gasto", "error", message);
   }
+}
+
+export async function setRetiradoAction(formData: FormData) {
+  const movementId = String(formData.get("movementId") ?? "");
+  const actorProfileId = String(formData.get("actorProfileId") ?? "");
+  const retirado = String(formData.get("retirado") ?? "") === "1";
+  const backTo = String(formData.get("backTo") ?? "gestor");
+
+  await setMovementRetirado({
+    movementId,
+    actorProfileId,
+    retirado,
+  });
+
+  revalidatePath("/panel/gestor");
+  revalidatePath("/panel/almacen");
+  revalidatePath("/panel/admin");
+
+  redirect(`/panel/${backTo}`);
 }

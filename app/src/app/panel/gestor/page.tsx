@@ -1,3 +1,4 @@
+import { setRetiradoAction } from "@/app/actions";
 import { AppShell } from "@/components/shell";
 import { DetailTable, KpiCard, PanelCard } from "@/components/cards";
 import { getMovementsForLocal } from "@/lib/data";
@@ -14,7 +15,7 @@ export default async function GestorPanelPage() {
   return (
     <AppShell
       title="Panel Gestor"
-      subtitle="Vista logística de retiros pendientes por local."
+      subtitle="Retiros disponibles por local y actualización del estado logístico."
       user={user}
     >
       <div className="kpiGrid">
@@ -46,7 +47,7 @@ export default async function GestorPanelPage() {
 
         <PanelCard
           title="Retiros disponibles"
-          description="Movimientos pendientes de retiro asociados al local."
+          description="Replica del bloque de retiros pendientes del plugin."
         >
           <div className="tableWrap">
             <table>
@@ -57,6 +58,7 @@ export default async function GestorPanelPage() {
                   <th>RUT</th>
                   <th>Latas</th>
                   <th>Monto</th>
+                  <th>Acción</th>
                 </tr>
               </thead>
               <tbody>
@@ -67,6 +69,17 @@ export default async function GestorPanelPage() {
                     <td>{movement.clientRut}</td>
                     <td>{movement.canCount}</td>
                     <td>{formatMoney(movement.amount)}</td>
+                    <td>
+                      <form action={setRetiradoAction}>
+                        <input name="movementId" type="hidden" value={movement.id} />
+                        <input name="actorProfileId" type="hidden" value={user.id} />
+                        <input name="retirado" type="hidden" value="1" />
+                        <input name="backTo" type="hidden" value="gestor" />
+                        <button className="secondaryButton" type="submit">
+                          Marcar retirado
+                        </button>
+                      </form>
+                    </td>
                   </tr>
                 ))}
               </tbody>

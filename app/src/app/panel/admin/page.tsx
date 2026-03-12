@@ -1,6 +1,6 @@
 import { AppShell } from "@/components/shell";
 import { KpiCard, PanelCard } from "@/components/cards";
-import { getMovements, getUsers } from "@/lib/data";
+import { getAuditEntries, getMovements, getUsers } from "@/lib/data";
 import {
   formatCompactDate,
   formatMoney,
@@ -13,13 +13,13 @@ export default async function AdminPanelPage() {
   const user = await requireSessionUser("admin");
   const users = await getUsers();
   const movements = await getMovements();
+  const auditEntries = await getAuditEntries(12);
   const totalGenerated = movements
     .filter((movement) => movement.amount > 0)
     .reduce((sum, movement) => sum + movement.amount, 0);
   const totalSpent = movements
     .filter((movement) => movement.amount < 0)
     .reduce((sum, movement) => sum + Math.abs(movement.amount), 0);
-
   const totalBalance = movements.reduce((sum, movement) => sum + movement.amount, 0);
   const pendingPickups = movements.filter(
     (movement) => movement.status === "pendiente_retiro",
@@ -34,7 +34,7 @@ export default async function AdminPanelPage() {
   return (
     <AppShell
       title="Panel Admin"
-      subtitle="Base del backoffice nuevo con lectura de usuarios y ledger real."
+      subtitle="Backoffice inicial con lectura de usuarios, ledger y auditoría."
       user={user}
     >
       <div className="kpiGrid">
@@ -65,18 +65,6 @@ export default async function AdminPanelPage() {
       </div>
 
       <div className="panelGrid">
-        <PanelCard
-          title="Módulos administrativos"
-          description="Primera réplica útil del backoffice del plugin."
-        >
-          <ul className="heroList">
-            <li>Ledger global con lectura por fecha, cliente y local</li>
-            <li>Usuarios por rol y local operativo</li>
-            <li>Base preparada para incentivos, reversas y ajustes</li>
-            <li>Diagnóstico, auditoría y exportables quedan como siguiente bloque</li>
-          </ul>
-        </PanelCard>
-
         <PanelCard title="Usuarios por rol">
           <div className="tableWrap">
             <table>
@@ -115,9 +103,9 @@ export default async function AdminPanelPage() {
                   <th>RUT</th>
                   <th>Local</th>
                   <th>Latas</th>
+                  <th>Evidencia</th>
                   <th>Monto</th>
                   <th>Estado</th>
-                  <th>Detalle</th>
                 </tr>
               </thead>
               <tbody>
@@ -135,11 +123,46 @@ export default async function AdminPanelPage() {
                     </td>
                     <td>{movement.clientName}</td>
                     <td>{movement.clientRut}</td>
-                    <td>{movement.localCode}</td>
-                    <td>{movement.canCount || "—"}</td>
+                    <td>{movement.localName ?? movement.localCode}</td>
+                    <td>{movement.type === "gasto" ? "—" : movement.canCount || "—"}</td>
+                    <td>
+                      {movement.evidenceUrl ? (
+                        <a href={movement.evidenceUrl} target="_blank">
+                          Ver
+                        </a>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
                     <td>{formatMoney(movement.amount)}</td>
                     <td>{statusLabel(movement.status)}</td>
-                    <td>{movement.note ?? "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </PanelCard>
+
+        <PanelCard title="Auditoría reciente">
+          <div className="tableWrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Actor</th>
+                  <th>Acción</th>
+                  <th>Objeto</th>
+                  <th>ID</th>
+                </tr>
+              </thead>
+              <tbody>
+                {auditEntries.map((entry) => (
+                  <tr key={entry.id}>
+                    <td>{formatCompactDate(entry.createdAt)}</td>
+                    <td>{entry.actorName}</td>
+                    <td>{entry.action}</td>
+                    <td>{entry.objectType}</td>
+                    <td>{entry.objectId}</td>
                   </tr>
                 ))}
               </tbody>

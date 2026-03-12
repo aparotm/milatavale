@@ -8,39 +8,45 @@ type ShellProps = {
   title: string;
   subtitle: string;
   user: AppUser;
+  actions?: ReactNode;
   children: ReactNode;
 };
 
-export function AppShell({ title, subtitle, user, children }: ShellProps) {
+export function AppShell({
+  title,
+  subtitle,
+  user,
+  actions,
+  children,
+}: ShellProps) {
   return (
-    <div className="shell">
-      <aside className="sidebar">
-        <div>
-          <p className="eyebrow">Mi Lata Vale</p>
-          <h1>Prototype</h1>
-          <p className="muted">
-            Replica inicial del plugin WordPress con usuarios de prueba.
-          </p>
+    <div className="appFrame">
+      <header className="topbar">
+        <Link className="brand" href={`/panel/${user.role}`}>
+          <div className="brandMark">
+            <span>MI LATA VALE</span>
+          </div>
+        </Link>
+
+        <div className="topbarCenter">
+          <Link href={`/panel/${user.role}`}>Panel</Link>
+          <Link href="/">Inicio</Link>
         </div>
 
-        <nav className="nav">
-          <Link href={`/panel/${user.role}`}>Resumen</Link>
-          <Link href="/">Inicio</Link>
-          <Link href="/login">Cambiar usuario</Link>
-        </nav>
+        <div className="topbarActions">
+          {actions}
+          <form action={logoutAction}>
+            <button className="dangerButton" type="submit">
+              Cerrar Sesión
+            </button>
+          </form>
+        </div>
+      </header>
 
-        <form action={logoutAction}>
-          <button className="secondaryButton" type="submit">
-            Cerrar sesión
-          </button>
-        </form>
-      </aside>
-
-      <main className="main">
+      <main className="contentWrap">
         <header className="pageHeader">
           <div>
-            <p className="eyebrow">{user.role}</p>
-            <h2>{title}</h2>
+            <h2 className="pageTitle">{title}</h2>
             <p className="muted">{subtitle}</p>
           </div>
 
