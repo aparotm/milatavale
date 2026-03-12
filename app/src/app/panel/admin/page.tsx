@@ -3,6 +3,7 @@ import Link from "next/link";
 import {
   createAdjustmentAction,
   createIncentiveAction,
+  impersonateUserAction,
   createRegularizationAction,
   importCsvAction,
   mergeClientsAction,
@@ -23,14 +24,14 @@ import {
   movementLabel,
   statusLabel,
 } from "@/lib/format";
-import { requireSessionUser } from "@/lib/session";
+import { requireSessionContext } from "@/lib/session";
 
 export default async function AdminPanelPage({
   searchParams,
 }: {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const user = await requireSessionUser("admin");
+  const { user, impersonator } = await requireSessionContext("admin");
   const params = searchParams ? await searchParams : undefined;
   const tab = typeof params?.tab === "string" ? params.tab : "dashboard";
   const status = typeof params?.status === "string" ? params.status : "all";
@@ -92,6 +93,7 @@ export default async function AdminPanelPage({
       title="Panel Admin"
       subtitle="Backoffice inicial con lectura de usuarios, ledger y auditoría."
       user={user}
+      adminViewer={impersonator}
       variant="admin"
     >
       {success ? <div className="successBox">{success}</div> : null}
@@ -144,6 +146,27 @@ export default async function AdminPanelPage({
           </div>
 
           <div className="panelGrid">
+            <PanelCard title="Ver como usuario">
+              <form action={impersonateUserAction} className="formStack">
+                <div className="field">
+                  <label htmlFor="admin-view-as">Usuario</label>
+                  <select id="admin-view-as" name="targetUserId" required>
+                    <option value="">Selecciona un usuario</option>
+                    {users
+                      .filter((appUser) => appUser.id !== user.id)
+                      .map((appUser) => (
+                        <option key={appUser.id} value={appUser.id}>
+                          {appUser.fullName} · {appUser.role} · {appUser.rut}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+                <button className="secondaryButton" type="submit">
+                  Ver como
+                </button>
+              </form>
+            </PanelCard>
+
             <PanelCard title="Usuarios por rol">
               <div className="tableWrap">
                 <table>

@@ -7,10 +7,10 @@ import {
   formatMoney,
   movementLabel,
 } from "@/lib/format";
-import { requireSessionUser } from "@/lib/session";
+import { requireSessionContext } from "@/lib/session";
 
 export default async function ClientePanelPage() {
-  const user = await requireSessionUser("cliente");
+  const { user, impersonator } = await requireSessionContext("cliente");
   const movements = await getMovementsForClient(user.id);
   const balance = await getClientBalance(user.id);
 
@@ -42,6 +42,7 @@ export default async function ClientePanelPage() {
       title={`Hola, ${user.fullName.split(" ")[0] ?? user.fullName}`}
       subtitle=""
       user={user}
+      adminViewer={impersonator}
       variant="frontend"
     >
       <div className="kpiGrid">

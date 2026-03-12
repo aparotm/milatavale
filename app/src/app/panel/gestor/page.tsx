@@ -3,10 +3,10 @@ import { AppShell } from "@/components/shell";
 import { DetailTable, KpiCard, PanelCard } from "@/components/cards";
 import { getMovementsForLocal } from "@/lib/data";
 import { formatCompactDate, formatMoney } from "@/lib/format";
-import { requireSessionUser } from "@/lib/session";
+import { requireSessionContext } from "@/lib/session";
 
 export default async function GestorPanelPage() {
-  const user = await requireSessionUser("gestor");
+  const { user, impersonator } = await requireSessionContext("gestor");
   const movements = await getMovementsForLocal(user.localCode ?? "");
   const pending = movements.filter(
     (movement) => movement.status === "pendiente_retiro",
@@ -17,6 +17,7 @@ export default async function GestorPanelPage() {
       title="Panel Gestor"
       subtitle="Retiros disponibles por local y actualización del estado logístico."
       user={user}
+      adminViewer={impersonator}
       variant="frontend"
     >
       <div className="kpiGrid">

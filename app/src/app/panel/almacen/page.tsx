@@ -19,7 +19,7 @@ import {
   movementLabel,
   statusLabel,
 } from "@/lib/format";
-import { requireSessionUser } from "@/lib/session";
+import { requireSessionContext } from "@/lib/session";
 
 type Params = Record<string, string | string[] | undefined>;
 
@@ -33,7 +33,7 @@ export default async function AlmacenPanelPage({
 }: {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const user = await requireSessionUser("almacen");
+  const { user, impersonator } = await requireSessionContext("almacen");
   const params = searchParams ? await searchParams : undefined;
   const tab = getParam(params, "tab") || "panel";
   const preview = getParam(params, "preview") === "1";
@@ -113,6 +113,7 @@ export default async function AlmacenPanelPage({
       title={`Hola, ${user.fullName.split(" ")[0] ?? user.fullName}`}
       subtitle=""
       user={user}
+      adminViewer={impersonator}
       variant="frontend"
       actions={
         <div className="toolbar">

@@ -19,8 +19,12 @@ import {
   setMovementRetirado,
   uploadEvidenceFile,
   updateLocalProfile,
+  getUserById,
 } from "@/lib/data";
-import { SESSION_COOKIE } from "@/lib/session";
+import {
+  IMPERSONATOR_COOKIE,
+  SESSION_COOKIE,
+} from "@/lib/session";
 
 function parsePositiveInteger(value: FormDataEntryValue | null) {
   const parsed = Number.parseInt(String(value ?? "").trim(), 10);
@@ -80,7 +84,66 @@ export async function loginAction(formData: FormData) {
 export async function logoutAction() {
   const cookieStore = await cookies();
   cookieStore.delete(SESSION_COOKIE);
+  cookieStore.delete(IMPERSONATOR_COOKIE);
   redirect("/login");
+}
+
+async function getActingAdmin() {
+  const cookieStore = await cookies();
+  const impersonatorId = cookieStore.get(IMPERSONATOR_COOKIE)?.value;
+  const sessionId = cookieStore.get(SESSION_COOKIE)?.value;
+  const actingUser = impersonatorId
+    ? await getUserById(impersonatorId)
+    : sessionId
+      ? await getUserById(sessionId)
+      : null;
+
+  return actingUser?.role === "admin" ? actingUser : null;
+}
+
+export async function impersonateUserAction(formData: FormData) {
+  const admin = await getActingAdmin();
+
+  if (!admin) {
+    redirect("/login");
+  }
+
+  const targetUserId = String(formData.get("targetUserId") ?? "");
+  const targetUser = await getUserById(targetUserId);
+
+  if (!targetUser) {
+    redirect("/panel/admin?error=Usuario+no+encontrado");
+  }
+
+  const cookieStore = await cookies();
+  cookieStore.set(IMPERSONATOR_COOKIE, admin.id, {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+  });
+  cookieStore.set(SESSION_COOKIE, targetUser.id, {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+  });
+
+  redirect(`/panel/${targetUser.role}`);
+}
+
+export async function stopImpersonationAction() {
+  const cookieStore = await cookies();
+  const impersonatorId = cookieStore.get(IMPERSONATOR_COOKIE)?.value;
+
+  if (impersonatorId) {
+    cookieStore.set(SESSION_COOKIE, impersonatorId, {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+    });
+  }
+
+  cookieStore.delete(IMPERSONATOR_COOKIE);
+  redirect("/panel/admin");
 }
 
 export async function previewIngresoAction(formData: FormData) {

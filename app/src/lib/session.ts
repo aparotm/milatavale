@@ -5,6 +5,7 @@ import { getUserById } from "@/lib/data";
 import { AppUser, UserRole } from "@/lib/types";
 
 const SESSION_COOKIE = "mlv_demo_user";
+const IMPERSONATOR_COOKIE = "mlv_admin_impersonator";
 
 export async function getSessionUser(): Promise<AppUser | null> {
   const cookieStore = await cookies();
@@ -17,7 +18,22 @@ export async function getSessionUser(): Promise<AppUser | null> {
   return getUserById(userId);
 }
 
-export async function requireSessionUser(role?: UserRole): Promise<AppUser> {
+export async function getImpersonatorUser(): Promise<AppUser | null> {
+  const cookieStore = await cookies();
+  const userId = cookieStore.get(IMPERSONATOR_COOKIE)?.value;
+
+  if (!userId) {
+    return null;
+  }
+
+  const user = await getUserById(userId);
+  return user?.role === "admin" ? user : null;
+}
+
+export async function requireSessionContext(role?: UserRole): Promise<{
+  user: AppUser;
+  impersonator: AppUser | null;
+}> {
   const user = await getSessionUser();
 
   if (!user) {
@@ -28,7 +44,13 @@ export async function requireSessionUser(role?: UserRole): Promise<AppUser> {
     redirect(`/panel/${user.role}`);
   }
 
+  const impersonator = await getImpersonatorUser();
+  return { user, impersonator };
+}
+
+export async function requireSessionUser(role?: UserRole): Promise<AppUser> {
+  const { user } = await requireSessionContext(role);
   return user;
 }
 
-export { SESSION_COOKIE };
+export { IMPERSONATOR_COOKIE, SESSION_COOKIE };
