@@ -42,6 +42,7 @@ export default async function ClientePanelPage() {
       title={`Hola, ${user.fullName.split(" ")[0] ?? user.fullName}`}
       subtitle=""
       user={user}
+      variant="frontend"
     >
       <div className="kpiGrid">
         <KpiCard label="Saldo disponible" value={formatMoney(balance)} />

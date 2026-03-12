@@ -113,6 +113,7 @@ export default async function AlmacenPanelPage({
       title={`Hola, ${user.fullName.split(" ")[0] ?? user.fullName}`}
       subtitle=""
       user={user}
+      variant="frontend"
       actions={
         <div className="toolbar">
           <Link className="primaryButton" href="/panel/almacen?tab=ingreso">

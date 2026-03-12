@@ -17,6 +17,7 @@ export default async function GestorPanelPage() {
       title="Panel Gestor"
       subtitle="Retiros disponibles por local y actualización del estado logístico."
       user={user}
+      variant="frontend"
     >
       <div className="kpiGrid">
         <KpiCard label="Retiros pendientes" value={String(pending.length)} />

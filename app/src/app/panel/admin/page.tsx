@@ -92,6 +92,7 @@ export default async function AdminPanelPage({
       title="Panel Admin"
       subtitle="Backoffice inicial con lectura de usuarios, ledger y auditoría."
       user={user}
+      variant="admin"
     >
       {success ? <div className="successBox">{success}</div> : null}
       {error ? <div className="errorBox">{error}</div> : null}
