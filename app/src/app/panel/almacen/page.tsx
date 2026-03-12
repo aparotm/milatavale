@@ -10,6 +10,7 @@ import {
 } from "@/app/actions";
 import { AppShell } from "@/components/shell";
 import { KpiCard, PanelCard } from "@/components/cards";
+import { EvidencePicker } from "@/components/evidence-picker";
 import { getLocalProfile, getMovementsForLocal, getUsers } from "@/lib/data";
 import {
   formatCompactDate,
@@ -227,15 +228,7 @@ export default async function AlmacenPanelPage({
                   rows={3}
                 />
               </div>
-              <div className="field">
-                <label htmlFor="ingreso-evidence">Evidencia (opcional)</label>
-                <input
-                  id="ingreso-evidence"
-                  accept="image/*"
-                  name="evidence"
-                  type="file"
-                />
-              </div>
+              <EvidencePicker inputId="ingreso-evidence" inputName="evidence" />
               <button className="primaryButton" type="submit">
                 Revisar registro
               </button>
@@ -339,15 +332,7 @@ export default async function AlmacenPanelPage({
                   rows={3}
                 />
               </div>
-              <div className="field">
-                <label htmlFor="gasto-evidence">Evidencia (opcional)</label>
-                <input
-                  id="gasto-evidence"
-                  accept="image/*"
-                  name="evidence"
-                  type="file"
-                />
-              </div>
+              <EvidencePicker inputId="gasto-evidence" inputName="evidence" />
               <button className="primaryButton" type="submit">
                 Revisar gasto
               </button>

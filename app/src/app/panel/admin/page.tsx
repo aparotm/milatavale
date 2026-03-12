@@ -33,6 +33,11 @@ export default async function AdminPanelPage({
   const user = await requireSessionUser("admin");
   const params = searchParams ? await searchParams : undefined;
   const tab = typeof params?.tab === "string" ? params.tab : "dashboard";
+  const status = typeof params?.status === "string" ? params.status : "all";
+  const movementType = typeof params?.movementType === "string" ? params.movementType : "all";
+  const clientFilter = typeof params?.client === "string" ? params.client : "";
+  const localFilter = typeof params?.local === "string" ? params.local : "";
+  const query = typeof params?.q === "string" ? params.q.toLowerCase() : "";
   const success = typeof params?.success === "string" ? params.success : "";
   const error = typeof params?.error === "string" ? params.error : "";
   const users = await getUsers();
@@ -41,6 +46,30 @@ export default async function AdminPanelPage({
   const diagnostics = await getDiagnosticsSummary();
   const duplicateGroups = await getDuplicateRutGroups();
   const clients = users.filter((item) => item.role === "cliente");
+  const locals = Array.from(
+    new Set(users.map((item) => item.localCode).filter(Boolean)),
+  ) as string[];
+  const filteredMovements = movements.filter((movement) => {
+    if (status !== "all" && movement.status !== status) return false;
+    if (movementType !== "all" && movement.type !== movementType) return false;
+    if (clientFilter && movement.clientId !== clientFilter) return false;
+    if (localFilter && movement.localCode !== localFilter) return false;
+    if (
+      query &&
+      ![
+        movement.clientName,
+        movement.clientRut,
+        movement.localName ?? movement.localCode,
+        movement.note ?? "",
+      ]
+        .join(" ")
+        .toLowerCase()
+        .includes(query)
+    ) {
+      return false;
+    }
+    return true;
+  });
   const totalGenerated = movements
     .filter((movement) => movement.amount > 0)
     .reduce((sum, movement) => sum + movement.amount, 0);
@@ -63,37 +92,26 @@ export default async function AdminPanelPage({
       title="Panel Admin"
       subtitle="Backoffice inicial con lectura de usuarios, ledger y auditoría."
       user={user}
-      actions={
-        <div className="toolbar">
-          <Link className="primaryButton" href="/panel/admin?tab=dashboard">
-            Dashboard
-          </Link>
-          <Link className="primaryButton" href="/panel/admin?tab=incentivos">
-            Incentivos
-          </Link>
-          <Link className="primaryButton" href="/panel/admin?tab=ajustes">
-            Ajustes
-          </Link>
-          <Link className="primaryButton" href="/panel/admin?tab=regularizacion">
-            Regularización
-          </Link>
-          <Link className="primaryButton" href="/panel/admin?tab=duplicados">
-            RUT duplicados
-          </Link>
-          <Link className="primaryButton" href="/panel/admin?tab=diagnostico">
-            Diagnóstico
-          </Link>
-          <Link className="primaryButton" href="/panel/admin?tab=importar">
-            Importar CSV
-          </Link>
-          <a className="primaryButton" href="/panel/admin/export">
-            Export CSV
-          </a>
-        </div>
-      }
     >
       {success ? <div className="successBox">{success}</div> : null}
       {error ? <div className="errorBox">{error}</div> : null}
+
+      <div className="adminLayout">
+        <aside className="adminSidebar">
+          <h3>Administración</h3>
+          <nav className="adminMenu">
+            <Link className={tab === "dashboard" ? "isActive" : ""} href="/panel/admin?tab=dashboard">Movimientos</Link>
+            <Link className={tab === "incentivos" ? "isActive" : ""} href="/panel/admin?tab=incentivos">Incentivos</Link>
+            <Link className={tab === "ajustes" ? "isActive" : ""} href="/panel/admin?tab=ajustes">Ajustes contables</Link>
+            <Link className={tab === "regularizacion" ? "isActive" : ""} href="/panel/admin?tab=regularizacion">Regularización histórica</Link>
+            <Link className={tab === "duplicados" ? "isActive" : ""} href="/panel/admin?tab=duplicados">RUT duplicados</Link>
+            <Link className={tab === "diagnostico" ? "isActive" : ""} href="/panel/admin?tab=diagnostico">Diagnóstico</Link>
+            <Link className={tab === "importar" ? "isActive" : ""} href="/panel/admin?tab=importar">Importar CSV</Link>
+            <a href="/panel/admin/export">Exportar CSV</a>
+          </nav>
+        </aside>
+
+        <div className="adminContent">
 
       {tab === "dashboard" ? (
         <>
@@ -152,9 +170,50 @@ export default async function AdminPanelPage({
               </div>
             </PanelCard>
 
-            <PanelCard title="Movimientos recientes">
+            <PanelCard title="Movimientos">
+              <form className="adminFilters" method="get">
+                <input name="tab" type="hidden" value="dashboard" />
+                <input
+                  className="searchInput"
+                  defaultValue={query}
+                  name="q"
+                  placeholder="Buscar por cliente, RUT, local o detalle"
+                />
+                <select defaultValue={status} name="status">
+                  <option value="all">Todos los estados</option>
+                  <option value="pendiente_retiro">Pendiente de retiro</option>
+                  <option value="retirado">Retirado</option>
+                </select>
+                <select defaultValue={movementType} name="movementType">
+                  <option value="all">Todos los tipos</option>
+                  <option value="ingreso">Ingreso</option>
+                  <option value="gasto">Gasto</option>
+                  <option value="incentivo">Incentivo</option>
+                  <option value="ajuste">Ajuste</option>
+                </select>
+                <select defaultValue={clientFilter} name="client">
+                  <option value="">Todos los clientes</option>
+                  {clients.map((client) => (
+                    <option key={client.id} value={client.id}>
+                      {client.fullName}
+                    </option>
+                  ))}
+                </select>
+                <select defaultValue={localFilter} name="local">
+                  <option value="">Todos los locales</option>
+                  {locals.map((local) => (
+                    <option key={local} value={local}>
+                      {local}
+                    </option>
+                  ))}
+                </select>
+                <button className="secondaryButton" type="submit">
+                  Filtrar
+                </button>
+              </form>
+
               <div className="tableWrap">
-                <table>
+                <table className="adminTable">
                   <thead>
                     <tr>
                       <th>Fecha</th>
@@ -170,7 +229,7 @@ export default async function AdminPanelPage({
                     </tr>
                   </thead>
                   <tbody>
-                    {movements.map((movement) => (
+                    {filteredMovements.map((movement) => (
                       <tr key={movement.id}>
                         <td>{formatCompactDate(movement.createdAt)}</td>
                         <td>
@@ -541,6 +600,8 @@ export default async function AdminPanelPage({
           </PanelCard>
         </div>
       ) : null}
+        </div>
+      </div>
     </AppShell>
   );
 }

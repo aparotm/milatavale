@@ -380,6 +380,20 @@ th {
   flex-wrap: wrap;
 }
 
+.imagePreview {
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: #fff;
+  max-width: 320px;
+}
+
+.imagePreview img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
 .errorBox,
 .successBox,
 .infoBox,
@@ -422,6 +436,55 @@ th {
   border: 1px solid var(--line);
 }
 
+.adminLayout {
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr);
+  gap: 18px;
+}
+
+.adminSidebar {
+  background: #f6f7f7;
+  border: 1px solid #dcdcde;
+  border-radius: 14px;
+  padding: 16px;
+  align-self: start;
+  position: sticky;
+  top: 20px;
+}
+
+.adminMenu {
+  display: grid;
+  gap: 6px;
+}
+
+.adminMenu a {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: #1d2327;
+}
+
+.adminMenu a.isActive,
+.adminMenu a:hover {
+  background: #fff;
+  border: 1px solid #dcdcde;
+}
+
+.adminContent {
+  min-width: 0;
+}
+
+.adminFilters {
+  display: grid;
+  grid-template-columns: 2fr repeat(4, minmax(0, 1fr)) auto;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.adminTable th {
+  background: #f6f7f7;
+}
+
 .searchInput {
   width: 100%;
   border-radius: 14px;
@@ -437,7 +500,9 @@ th {
   .kpiGrid,
   .toolbar,
   .actionRow,
-  .previewMetrics {
+  .previewMetrics,
+  .adminLayout,
+  .adminFilters {
     grid-template-columns: 1fr;
   }
 
@@ -453,5 +518,9 @@ th {
 
   .pageHeader {
     flex-direction: column;
+  }
+
+  .adminSidebar {
+    position: static;
   }
 }
