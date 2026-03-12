@@ -54,6 +54,7 @@ export default async function HomePage() {
                   <tr>
                     <th>Rol</th>
                     <th>Usuario</th>
+                    <th>RUT</th>
                     <th>Email</th>
                     <th>Password</th>
                   </tr>
@@ -65,6 +66,7 @@ export default async function HomePage() {
                         <span className="tag">{user.role}</span>
                       </td>
                       <td>{user.fullName}</td>
+                      <td>{user.rut}</td>
                       <td>{user.email}</td>
                       <td>{user.password ?? "demo123"}</td>
                     </tr>
