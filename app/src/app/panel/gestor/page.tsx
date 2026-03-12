@@ -1,11 +1,11 @@
 import { AppShell } from "@/components/shell";
 import { KpiCard, PanelCard } from "@/components/cards";
-import { getMovementsForLocal } from "@/lib/demo-data";
+import { getMovementsForLocal } from "@/lib/data";
 import { requireSessionUser } from "@/lib/session";
 
 export default async function GestorPanelPage() {
   const user = await requireSessionUser("gestor");
-  const movements = getMovementsForLocal(user.localCode ?? "");
+  const movements = await getMovementsForLocal(user.localCode ?? "");
   const pending = movements.filter(
     (movement) => movement.status === "pendiente_retiro",
   );

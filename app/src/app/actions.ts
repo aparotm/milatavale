@@ -3,14 +3,14 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { getUserByCredentials } from "@/lib/demo-data";
+import { getUserByCredentials } from "@/lib/data";
 import { SESSION_COOKIE } from "@/lib/session";
 
 export async function loginAction(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "").trim();
 
-  const user = getUserByCredentials(email, password);
+  const user = await getUserByCredentials(email, password);
 
   if (!user) {
     redirect("/login?error=1");

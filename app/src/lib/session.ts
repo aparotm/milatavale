@@ -1,12 +1,12 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { getUserById } from "@/lib/demo-data";
-import { DemoUser, UserRole } from "@/lib/types";
+import { getUserById } from "@/lib/data";
+import { AppUser, UserRole } from "@/lib/types";
 
 const SESSION_COOKIE = "mlv_demo_user";
 
-export async function getSessionUser(): Promise<DemoUser | null> {
+export async function getSessionUser(): Promise<AppUser | null> {
   const cookieStore = await cookies();
   const userId = cookieStore.get(SESSION_COOKIE)?.value;
 
@@ -17,7 +17,7 @@ export async function getSessionUser(): Promise<DemoUser | null> {
   return getUserById(userId);
 }
 
-export async function requireSessionUser(role?: UserRole): Promise<DemoUser> {
+export async function requireSessionUser(role?: UserRole): Promise<AppUser> {
   const user = await getSessionUser();
 
   if (!user) {

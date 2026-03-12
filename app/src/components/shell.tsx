@@ -2,12 +2,12 @@ import Link from "next/link";
 import { ReactNode } from "react";
 
 import { logoutAction } from "@/app/actions";
-import { DemoUser } from "@/lib/types";
+import { AppUser } from "@/lib/types";
 
 type ShellProps = {
   title: string;
   subtitle: string;
-  user: DemoUser;
+  user: AppUser;
   children: ReactNode;
 };
 

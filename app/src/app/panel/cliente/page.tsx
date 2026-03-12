@@ -3,13 +3,13 @@ import { KpiCard, PanelCard } from "@/components/cards";
 import {
   getClientBalance,
   getMovementsForClient,
-} from "@/lib/demo-data";
+} from "@/lib/data";
 import { requireSessionUser } from "@/lib/session";
 
 export default async function ClientePanelPage() {
   const user = await requireSessionUser("cliente");
-  const movements = getMovementsForClient(user.id);
-  const balance = getClientBalance(user.id);
+  const movements = await getMovementsForClient(user.id);
+  const balance = await getClientBalance(user.id);
   const generated = movements
     .filter((movement) => movement.amount > 0)
     .reduce((sum, movement) => sum + movement.amount, 0);

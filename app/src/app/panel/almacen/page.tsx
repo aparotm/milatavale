@@ -1,12 +1,13 @@
 import { AppShell } from "@/components/shell";
 import { KpiCard, PanelCard } from "@/components/cards";
-import { demoUsers, getMovementsForLocal } from "@/lib/demo-data";
+import { getMovementsForLocal, getUsers } from "@/lib/data";
 import { requireSessionUser } from "@/lib/session";
 
 export default async function AlmacenPanelPage() {
   const user = await requireSessionUser("almacen");
-  const movements = getMovementsForLocal(user.localCode ?? "");
-  const clients = demoUsers.filter(
+  const movements = await getMovementsForLocal(user.localCode ?? "");
+  const users = await getUsers();
+  const clients = users.filter(
     (demoUser) =>
       demoUser.role === "cliente" && demoUser.localCode === user.localCode,
   );

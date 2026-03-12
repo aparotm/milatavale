@@ -1,13 +1,15 @@
 import { AppShell } from "@/components/shell";
 import { KpiCard, PanelCard } from "@/components/cards";
-import { demoMovements, demoUsers } from "@/lib/demo-data";
+import { getMovements, getUsers } from "@/lib/data";
 import { requireSessionUser } from "@/lib/session";
 
 export default async function AdminPanelPage() {
   const user = await requireSessionUser("admin");
+  const users = await getUsers();
+  const movements = await getMovements();
 
-  const totalBalance = demoMovements.reduce((sum, movement) => sum + movement.amount, 0);
-  const pendingPickups = demoMovements.filter(
+  const totalBalance = movements.reduce((sum, movement) => sum + movement.amount, 0);
+  const pendingPickups = movements.filter(
     (movement) => movement.status === "pendiente_retiro",
   ).length;
 
@@ -18,8 +20,8 @@ export default async function AdminPanelPage() {
       user={user}
     >
       <div className="kpiGrid">
-        <KpiCard label="Usuarios demo" value={String(demoUsers.length)} />
-        <KpiCard label="Movimientos demo" value={String(demoMovements.length)} />
+        <KpiCard label="Usuarios" value={String(users.length)} />
+        <KpiCard label="Movimientos" value={String(movements.length)} />
         <KpiCard label="Saldo neto demo" value={`$${totalBalance}`} />
         <KpiCard label="Pendientes retiro" value={String(pendingPickups)} />
       </div>
@@ -50,7 +52,7 @@ export default async function AdminPanelPage() {
                 </tr>
               </thead>
               <tbody>
-                {demoMovements.map((movement) => (
+                {movements.map((movement) => (
                   <tr key={movement.id}>
                     <td>{movement.id}</td>
                     <td>

@@ -41,7 +41,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               <label className="field">
                 <span>Password</span>
                 <input
-                  defaultValue="admin123"
+                  defaultValue="demo123"
                   name="password"
                   type="password"
                   required

@@ -1,8 +1,11 @@
 import Link from "next/link";
 
-import { demoUsers, demoMovements } from "@/lib/demo-data";
+import { getMovements, getUsers } from "@/lib/data";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const users = await getUsers();
+  const movements = await getMovements();
+
   return (
     <main className="landing">
       <section className="landingHero">
@@ -51,14 +54,14 @@ export default function HomePage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {demoUsers.map((user) => (
+                  {users.map((user) => (
                     <tr key={user.id}>
                       <td>
                         <span className="tag">{user.role}</span>
                       </td>
                       <td>{user.fullName}</td>
                       <td>{user.email}</td>
-                      <td>{user.password}</td>
+                      <td>{user.password ?? "demo123"}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -69,8 +72,8 @@ export default function HomePage() {
           <section className="panelCard">
             <h3>Dataset demo inicial</h3>
             <p className="muted">
-              El prototipo parte con {demoUsers.length} usuarios y{" "}
-              {demoMovements.length} movimientos para validar los paneles.
+              El prototipo parte con {users.length} usuarios y{" "}
+              {movements.length} movimientos para validar los paneles.
             </p>
           </section>
         </div>
